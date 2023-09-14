@@ -1,0 +1,123 @@
+
+# load the realtime components
+
+	loadrt [KINS]KINEMATICS
+	loadrt [EMCMOT]EMCMOT base_period_nsec=[EMCMOT]BASE_PERIOD servo_period_nsec=[EMCMOT]SERVO_PERIOD num_joints=[KINS]JOINTS
+
+	loadrt weeny
+
+
+# estop loopback, SPI comms enable and feedback
+	net user-enable-out 	<= iocontrol.0.user-enable-out		=> weeny.SPI-enable
+	net user-request-enable <= iocontrol.0.user-request-enable	=> weeny.SPI-reset
+	net weeny-status 	<= weeny.SPI-status 			=> iocontrol.0.emc-enable-in
+	
+
+# add the weeny and motion functions to threads
+
+	addf weeny.read servo-thread
+	addf motion-command-handler servo-thread
+	addf motion-controller servo-thread
+	addf weeny.update-freq servo-thread
+	addf weeny.write servo-thread        
+
+# Joint 0 setup
+
+	setp weeny.joint.0.scale 		[JOINT_0]SCALE
+	setp weeny.joint.0.maxaccel 	[JOINT_0]STEPGEN_MAXACCEL
+
+	net xpos-cmd 		<= joint.0.motor-pos-cmd 	=> weeny.joint.0.pos-cmd  
+	net j0pos-fb 		<= weeny.joint.0.pos-fb 	=> joint.0.motor-pos-fb
+	net j0enable 		<= joint.0.amp-enable-out 	=> weeny.joint.0.enable
+
+
+# Joint 1 setup
+
+	setp weeny.joint.1.scale 		[JOINT_1]SCALE
+	setp weeny.joint.1.maxaccel 	[JOINT_1]STEPGEN_MAXACCEL
+
+	net j1pos-cmd 		<= joint.1.motor-pos-cmd 	=> weeny.joint.1.pos-cmd
+	net j1pos-fb 		<= weeny.joint.1.pos-fb 	=> joint.1.motor-pos-fb 
+        net j1enable 		<= joint.1.amp-enable-out 	=> weeny.joint.1.enable
+
+
+# Joint 2 setup
+
+        setp weeny.joint.2.scale 		[JOINT_2]SCALE
+        setp weeny.joint.2.maxaccel 	[JOINT_2]STEPGEN_MAXACCEL
+
+        net j2pos-cmd 		<= joint.2.motor-pos-cmd 	=> weeny.joint.2.pos-cmd
+        net j2pos-fb 		<= weeny.joint.2.pos-fb 	=> joint.2.motor-pos-fb
+        net j2enable 		<= joint.2.amp-enable-out 	=> weeny.joint.2.enable
+
+
+# Joint 3 setup
+
+        setp weeny.joint.3.scale 		[JOINT_3]SCALE
+        setp weeny.joint.3.maxaccel 	[JOINT_3]STEPGEN_MAXACCEL
+
+        net j3pos-cmd 		<= joint.3.motor-pos-cmd 	=> weeny.joint.3.pos-cmd
+        net j3pos-fb 		<= weeny.joint.3.pos-fb 	=> joint.3.motor-pos-fb
+        net j3enable 		<= joint.3.amp-enable-out 	=> weeny.joint.3.enable
+
+
+
+# Analog inputs to jog x/y axes, eg. joystick
+# Note that joystick must not be moved for 10 seconds on startup, to calibrate the center position.
+# The centering and deadband is a bit dodgy, would recommend putting jog-enable on a switch as a safeguard.
+        #setp                                   axis.x.jog-enable     1
+        #setp                                   axis.x.jog-vel-mode   1
+        #setp                                   axis.x.jog-scale      0.01
+        #net jogx weeny.analog0.jogcounts  =>   axis.x.jog-counts
+
+        #setp                                   axis.y.jog-enable     1
+        #setp                                   axis.y.jog-vel-mode   1
+        #setp                                   axis.y.jog-scale      0.01
+        #net jogy weeny.analog1.jogcounts  =>   axis.y.jog-counts
+
+
+# Use rotary encoder to jog z axis
+        #setp                                   axis.z.jog-enable     1
+        #setp                                   axis.z.jog-vel-mode   1
+        #setp                                   axis.z.jog-scale      0.1
+        #net jogz weeny.encoder.jogcounts  =>   axis.z.jog-counts 
+
+
+# Use digital inputs to start and stop program, touch off xyz as zero
+        #net gostop      weeny.input.00   =>    halui.program.stop
+        #net touchoff    weeny.input.01   =>    halui.mdi-command-01
+        #net gorun       weeny.input.02   =>    halui.program.run
+
+
+# Use rotary encoder to adjust feed rate
+        #setp                                   halui.feed-override.count-enable    1
+        #setp                                   halui.feed-override.scale           0.05
+        #net jogz weeny.encoder.jogcounts  =>   halui.feed-override.counts
+
+
+# Set spindle PWM, where a value of 65535 will saturate the signal. Eg. set to 32768 for half speed.
+        net spindlespeed    spindle.0.speed-out  =>  weeny.spindle.set-speed    
+
+
+# Light green component of first RGB LED when machine is on
+        net machineled  weeny.rgb.led00.green       halui.machine.is-on
+
+
+# Set second RGB LED to red for MDI, green for manual, blue for auto mode
+        net modeledr     halui.mode.is-mdi     =>  weeny.rgb.led01.red            
+        net modeledg     halui.mode.is-manual  =>  weeny.rgb.led01.green     
+        net modeledb     halui.mode.is-auto    =>  weeny.rgb.led01.blue      
+
+
+# Set third RGB LED to yellow when spindle is on
+        net spindleled       halui.spindle.0.is-on   =>    weeny.rgb.led02.red      weeny.rgb.led02.green  # yellow
+
+
+# Set color of RGB LEDs 5-8 based on motion.digital-out values. Eg. use "m64 p0" and "m65 p0" to turn LED 4 on and off
+        net digiout0   motion.digital-out-00   weeny.output.00  =>  weeny.rgb.led04.blue   weeny.rgb.led04.green   weeny.rgb.led04.red   # white
+        net digiout1   motion.digital-out-01   weeny.output.01  =>  weeny.rgb.led05.blue   weeny.rgb.led05.green   weeny.rgb.led05.red   # white
+        net digiout2   motion.digital-out-02   weeny.output.02  =>  weeny.rgb.led06.blue   weeny.rgb.led06.green                         # cyan
+        net digiout3   motion.digital-out-03   weeny.output.03  =>  weeny.rgb.led07.blue   weeny.rgb.led07.green                         # cyan
+
+
+
