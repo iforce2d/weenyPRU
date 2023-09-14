@@ -76,7 +76,7 @@ typedef struct {
 	float			cmd_d[JOINTS];					// command derivative
         //hal_float_t 	*setPoint[VARIABLES];
         //hal_float_t 	*processVariable[VARIABLES];
-        hal_s32_t       *jogcounts[JOINTS];
+        hal_s32_t       *jogcounts[3];          // analog0, analog1, rotary encoder
         hal_bit_t   	*outputs[DIGITAL_OUTPUTS];
         hal_bit_t   	*inputs[DIGITAL_INPUTS];
         hal_bit_t   	*rgb[RGB_BITS];
@@ -101,7 +101,7 @@ typedef struct
 {
         int32_t header;                 // 4 bytes
         int32_t jointFeedback[JOINTS];  // 16 bytes
-        int32_t jogcounts[JOINTS];      // 16 bytes
+        int32_t jogcounts[4];           // 16 bytes
         uint16_t inputs;                // 2 bytes
 } rxData_t;
 
@@ -328,10 +328,10 @@ This is throwing errors from axis.py for some reason...
         if (retval < 0) goto error;
         retval = hal_pin_s32_newf(HAL_OUT, &(data->jogcounts[2]), comp_id, "%s.encoder.jogcounts", prefix);
         if (retval < 0) goto error;
-        retval = hal_pin_s32_newf(HAL_OUT, &(data->jogcounts[3]), comp_id, "%s.buttons.jogcounts", prefix);
-        if (retval < 0) goto error;
+//        retval = hal_pin_s32_newf(HAL_OUT, &(data->jogcounts[3]), comp_id, "%s.buttons.jogcounts", prefix);
+//        if (retval < 0) goto error;
 
-        for (n = 0; n < JOINTS; n++) {
+        for (n = 0; n < 3; n++) {
             *(data->jogcounts[n]) = 0;
         }
 
@@ -847,8 +847,11 @@ void spi_read()
 						curr_pos = (double)(accum[i]-STEP_OFFSET) * (1.0 / STEP_MASK);
                                                 *(data->pos_fb[i]) = (float)((curr_pos+0.5) / data->pos_scale[i]);
 
-                                                *(data->jogcounts[i]) = rxData.jogcounts[i];
+                                                
 					}
+					
+					for (i = 0; i < 3; i++)
+						*(data->jogcounts[i]) = rxData.jogcounts[i];
 
 					// Feedback
 //                                        for (i = 0; i < VARIABLES; i++)
