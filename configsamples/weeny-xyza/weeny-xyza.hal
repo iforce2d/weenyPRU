@@ -95,7 +95,7 @@
         #net jogz weeny.encoder.jogcounts  =>   halui.feed-override.counts
 
 
-# Set spindle PWM, where a value of 65535 will saturate the signal. Eg. set to 32768 for half speed.
+# Set spindle PWM, where a value of 65535 will saturate the signal to high. Eg. set to 32768 for half speed.
         net spindlespeed    spindle.0.speed-out  =>  weeny.spindle.set-speed    
 
 
@@ -113,7 +113,7 @@
         net spindleled       halui.spindle.0.is-on   =>    weeny.rgb.led02.red      weeny.rgb.led02.green  # yellow
 
 
-# Set color of RGB LEDs 5-8 based on motion.digital-out values. Eg. use "m64 p0" and "m65 p0" to turn LED 4 on and off
+# Set color of RGB LEDs 5-8 based on motion.digital-out values. Eg. use "m64 p0" and "m65 p0" to turn LED 5 on and off
         net digiout0   motion.digital-out-00   weeny.output.00  =>  weeny.rgb.led04.blue   weeny.rgb.led04.green   weeny.rgb.led04.red   # white
         net digiout1   motion.digital-out-01   weeny.output.01  =>  weeny.rgb.led05.blue   weeny.rgb.led05.green   weeny.rgb.led05.red   # white
         net digiout2   motion.digital-out-02   weeny.output.02  =>  weeny.rgb.led06.blue   weeny.rgb.led06.green                         # cyan
