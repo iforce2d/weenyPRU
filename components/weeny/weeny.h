@@ -1,6 +1,6 @@
 
-#ifndef REMORA_H
-#define REMORA_H
+#ifndef WEENY_H
+#define WEENY_H
 
 
 #define JOINTS				4  			// Number of joints - set this the same as Remora firmware code!!!. Max 8 joints

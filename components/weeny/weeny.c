@@ -81,6 +81,7 @@ typedef struct {
         hal_bit_t   	*inputs[DIGITAL_INPUTS];
         hal_bit_t   	*rgb[RGB_BITS];
         hal_float_t 	*spindleSpeed[1];
+        hal_float_t 	*adc[2]; // raw ADC values
 } data_t;
 
 static data_t *data;
@@ -94,7 +95,7 @@ typedef struct
         uint8_t rgb[6];                 // 6 bytes (3 bits per LED x 16 LEDs = 48 bits)
         uint16_t spindleSpeed;          // 2 bytes
 
-        uint8_t dummy[7];               // make up to same size as rxData_t
+        uint8_t dummy[11];              // make up to same size as rxData_t
 } txData_t;
 
 typedef struct
@@ -103,6 +104,7 @@ typedef struct
         int32_t jointFeedback[JOINTS];  // 16 bytes
         int32_t jogcounts[4];           // 16 bytes
         uint16_t inputs;                // 2 bytes
+        uint16_t adc[2];		// 4 bytes
 } rxData_t;
 
 typedef union
@@ -333,6 +335,13 @@ This is throwing errors from axis.py for some reason...
 
         for (n = 0; n < 3; n++) {
             *(data->jogcounts[n]) = 0;
+        }
+
+
+        for (n = 0; n < 2; n++) {
+            retval = hal_pin_float_newf(HAL_OUT, &(data->adc[n]), comp_id, "%s.analog%01d.raw", prefix, n);
+            if (retval < 0) goto error;
+            *(data->adc[n]) = 0;
         }
 
 //	for (n = 0; n < VARIABLES; n++) {
@@ -852,6 +861,9 @@ void spi_read()
 					
 					for (i = 0; i < 3; i++)
 						*(data->jogcounts[i]) = rxData.jogcounts[i];
+
+                                        for (i = 0; i < 2; i++)
+                                                *(data->adc[i]) = rxData.adc[i] / 4096.0f;
 
 					// Feedback
 //                                        for (i = 0; i < VARIABLES; i++)

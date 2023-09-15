@@ -41,6 +41,7 @@ void doJogUpdate() {
 		HAL_ADC_Start(&hadc1);
 		HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
 		uint16_t raw = HAL_ADC_GetValue(&hadc1); // range 0-4095
+		txData.adc[0] = raw;
 		if ( updateCount < 500 ) {
 			adc1Center = 0.9f * adc1Center + raw * 0.1f;
 		}
@@ -53,6 +54,7 @@ void doJogUpdate() {
 		HAL_ADC_Start(&hadc2);
 		HAL_ADC_PollForConversion(&hadc2, HAL_MAX_DELAY);
 		uint16_t raw = HAL_ADC_GetValue(&hadc2); // range 0-4095
+		txData.adc[1] = raw;
 		if ( updateCount < 500 ) {
 			adc2Center = 0.9f * adc2Center + raw * 0.1f;
 			updateCount++;
