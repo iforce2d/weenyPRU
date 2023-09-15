@@ -17,10 +17,10 @@ Stepgen sg_z;
 Stepgen sg_a;
 
 void setupTasks() {
-	initStepgen(&sg_a, 0, false, GPIOA, GPIO_PIN_4, TIM_CHANNEL_1); // A: dir on PA4, step on PA0
-	initStepgen(&sg_z, 1, false, GPIOA, GPIO_PIN_5, TIM_CHANNEL_2); // Z: dir on PA5, step on PA1
-	initStepgen(&sg_y, 2, false, GPIOA, GPIO_PIN_6, TIM_CHANNEL_3); // Y: dir on PA6, step on PA2
-	initStepgen(&sg_x, 3, false, GPIOA, GPIO_PIN_7, TIM_CHANNEL_4); // X: dir on PA7, step on PA3
+	initStepgen(&sg_a, 0, GPIOA, GPIO_PIN_4, TIM_CHANNEL_1); // A: dir on PA4, step on PA0
+	initStepgen(&sg_z, 1, GPIOA, GPIO_PIN_5, TIM_CHANNEL_2); // Z: dir on PA5, step on PA1
+	initStepgen(&sg_y, 2, GPIOA, GPIO_PIN_6, TIM_CHANNEL_3); // Y: dir on PA6, step on PA2
+	initStepgen(&sg_x, 3, GPIOA, GPIO_PIN_7, TIM_CHANNEL_4); // X: dir on PA7, step on PA3
 }
 
 typedef struct PortAndPin {

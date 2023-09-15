@@ -7,7 +7,6 @@
 typedef struct {
 
 	int jointNumber;
-	bool reversed;
     GPIO_TypeDef* dirPort;
 	uint16_t dirPin;
 	uint32_t stepTimerChannel;
@@ -22,7 +21,6 @@ typedef struct {
 void initStepgen(
 		Stepgen* sg,
 		int jointNumber,
-		bool reversed,
 		GPIO_TypeDef* dirPort,
 		uint16_t dirPin,
 		uint32_t stepTimerChannel);

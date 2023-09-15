@@ -15,13 +15,11 @@ const float frequencyScale = (float)(1 << STEPBIT) / (float)PRU_BASEFREQ;
 void initStepgen(
 		Stepgen* sg,
 		int jointNumber,
-		bool reversed,
 		GPIO_TypeDef* dirPort,
 		uint16_t dirPin,
 		uint32_t stepTimerChannel)
 {
 	sg->jointNumber = jointNumber;
-	sg->reversed = reversed;
 	sg->dirPort = dirPort;
 	sg->dirPin = dirPin;
 	sg->stepTimerChannel = stepTimerChannel;
@@ -43,7 +41,7 @@ void prepStep(Stepgen* sg)
 		stepNow ^= sg->DDSaccumulator;                          	// Test for changes in the low half of the DDS accumulator
 		stepNow &= (1L << STEPBIT);
 
-		bool isForward = sg->reversed ? (DDSaddValue < 0) : (DDSaddValue > 0);	// The sign of the DDS add value indicates the desired direction
+		bool isForward = DDSaddValue > 0;							// The sign of the DDS add value indicates the desired direction
 		HAL_GPIO_WritePin(sg->dirPort, sg->dirPin, isForward ? GPIO_PIN_SET : GPIO_PIN_RESET);
 
 		if (stepNow) {
