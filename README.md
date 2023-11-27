@@ -8,19 +8,21 @@ The firmware for the realtime unit targets STM32F103C8 aka 'Blue Pill'. Source c
 
 Unlike Remora, this firmware is not conveniently configurable by SD card, so all modifications will need to be changed in the source code.
 
-Tested on Raspberry Pi 3B and ZeroW with 4.19.71 PREEMPT, LinuxCNC 2.8.4
+Tested on Raspberry Pi 3B, 3B+ and ZeroW with 4.19.71 PREEMPT, LinuxCNC 2.8.4
 
 <br>
 
 ## Features
 
 - 4 axis stepper motor control at up to 50kHz step rate
-- 4 μs step pulse by default
-- 10kHz spindle PWM frequency
-- 14 digital I/O (allocate these to input and output as desired)
+- 10kHz spindle PWM frequency output (3.3V)
+- 4 opto-coupler ready inputs for high-voltage limit switches
+- 9 other digital I/O (allocate these to input and output as desired, 3.3V level)
 - two analog inputs for joystick jogging
 - one rotary encoder (slow for manual jogging etc, not for closed loop motor control!)
 - WS2812 style RGB LED strip (up to 16) controllable from HAL
+- TMC2209 stepper driver control from HAL (microstep and current)
+
 
 <br>
 
@@ -45,6 +47,28 @@ Pin PC13 is used to indicate that SPI connection to Raspberry Pi is established.
 ## About RGB LEDs
 
 The WS2812 protocol is used to control up to 16 addressable RGB LEDs on PB5. Although these are not officially supposed to work with 3.3V signals, in my experience many variants do actually work just fine. You can control the individual red/green/blue components of each LED (simply on or off, no gradual dimming) via HAL pins. Note that when SPI connection is lost, all RGB LEDs will also turn off.
+
+<br>
+
+## About TMC2209 UART control
+
+Trinamic TMC2209 stepper drivers can be controlled via UART to alter microstep and RMS current settings. To do this:
+
+- (v1.1 board) connect D11 to any of the 'UART' pins (side nearest the stepper driver), and add a 1k resistor pullup to VCC.
+- (v1.2 board) bridge the 'UART' jumper
+
+The default values are 8x microstepping and 200mA current. Changes are made by setting pin values, eg.
+
+    setp  weeny.tmc.0.microsteps  16
+    setp  weeny.tmc.0.current     400
+
+Bridge the MS1/MS2 pins to set the address of each driver as desired. The example above will affect all drivers with both MS1 and MS2 left open.
+
+Microsteps should be one of 0, 2, 4, 8, 16, 32, 63, 128, 256
+
+Current should be a value between 0-2000 (milliamps). Note that this is an approximate setting, as the TMC2209 can only control current in 32 distinct steps and will choose whatever is the closest value it can actually perform.
+
+Changes will be relayed to the drivers at a rate of once per second.
 
 <br>
 
@@ -93,6 +117,14 @@ Sets the duty cycle of the PWM pulse on PA8. This takes a value from 0-65535, wh
 ### weeny.rgb.led00.red / green / blue
 
 Sets the red/green/blue component to on or off in the RGB LED of the given index.
+
+### weeny.tmc.N.microsteps
+
+Sets the microstep resolution for a TMC2209 stepper driver at address N. Values other than 0, 2, 4, 8, 16, 32, 63, 128, 256 will be ignored.
+
+### weeny.tmc.N.current
+
+Sets the (approximate) RMS current in milliamps for a TMC2209 stepper driver at address N. Values outside the range 0-2000 will be ignored.
 
 <br>
 
@@ -143,10 +175,14 @@ The default layout shares the 14 digital I/O equally between input and output. Y
 <tr><td> PA15 </td><td>D8</td></tr>
 <tr><td>PB3</td><td>D9 </td></tr>
 <tr><td>PB4</td><td>D10 </td></tr>
-<tr><td>PB6</td><td>D11 </td></tr>
-<tr><td>PB7</td><td>D12 </td></tr>
-<tr><td>PB8</td><td>D13 </td></tr>
-<tr><td>PB9</td><td>D14 </td></tr>
+<tr><td>PB7</td><td>D11 </td></tr>
+<tr><td>PB8</td><td>D12 </td></tr>
+<tr><td>PB9</td><td>D13 </td></tr>
+</table>
+
+### UART
+<table>
+<tr><td>PB6</td><td>TMC stepper control (one-wire)</td></tr>
 </table>
 
 ### Analog input

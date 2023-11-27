@@ -22,16 +22,8 @@ TMC_UART tmc_1;
 TMC_UART tmc_2;
 TMC_UART tmc_3;
 
-#define TMC_MICROSTEPS_0	8
-#define TMC_MICROSTEPS_1	8
-#define TMC_MICROSTEPS_2	8
-#define TMC_MICROSTEPS_3	8
-
-#define TMC_CURRENT_0		200
-#define TMC_CURRENT_1		200
-#define TMC_CURRENT_2		200
-#define TMC_CURRENT_3		200
-
+#define TMC_DEFAULT_MICROSTEPS	8		// 0, 2, 4, 8, 16, 32, 64, 128, 256
+#define TMC_DEFAULT_CURRENT		200		// 0 - 2000
 
 void setupTasks() {
 	initStepgen(&sg_0, 0, GPIOA, GPIO_PIN_4, TIM_CHANNEL_1); // A: dir on PA4, step on PA0
@@ -41,10 +33,11 @@ void setupTasks() {
 
 	HAL_Delay(15); // TMCs take a while to wake up?
 
-	initTMCUART(&tmc_0, 0x00, TMC_MICROSTEPS_0, TMC_CURRENT_0);
-	initTMCUART(&tmc_1, 0x01, TMC_MICROSTEPS_1, TMC_CURRENT_1);
-	initTMCUART(&tmc_2, 0x02, TMC_MICROSTEPS_2, TMC_CURRENT_2);
-	initTMCUART(&tmc_3, 0x03, TMC_MICROSTEPS_3, TMC_CURRENT_3);
+	initTMCUART(&tmc_0, 0x00, TMC_DEFAULT_MICROSTEPS, TMC_DEFAULT_CURRENT);
+	initTMCUART(&tmc_1, 0x01, TMC_DEFAULT_MICROSTEPS, TMC_DEFAULT_CURRENT);
+	initTMCUART(&tmc_2, 0x02, TMC_DEFAULT_MICROSTEPS, TMC_DEFAULT_CURRENT);
+	initTMCUART(&tmc_3, 0x03, TMC_DEFAULT_MICROSTEPS, TMC_DEFAULT_CURRENT);
+
 }
 
 typedef struct PortAndPin {
@@ -168,7 +161,7 @@ void doMainLoopTasks() {
 	static int lastSlowUpdatesTime = 0;
 
 	if ( lastSlowUpdatesTime != servoThreadCount ) {
-		int counter50Hz = servoThreadCount % 20; // about 50Hz
+		int counter50Hz = servoThreadCount % 20; // 50Hz
 
 		if ( counter50Hz == 0 ) {
 			if ( haveComms ) {
@@ -193,15 +186,20 @@ void doMainLoopTasks() {
 
 	static int lastTMCUpdatesTime = 0;
 
-	if ( lastTMCUpdatesTime != servoThreadCount ) {
+	if ( lastTMCUpdatesTime != servoThreadCount ) { // make sure we don't do this multiple times inside one servo thread loop
 
-		int counter5Hz = servoThreadCount % 1000; // about 1Hz
+		if ( servoThreadCount % 1000 == 0 ) { // 1Hz
 
-		if ( counter5Hz == 0 ) {
-			set_rms_current( &tmc_0, TMC_CURRENT_0 ); // these take about 1ms each
-			set_rms_current( &tmc_1, TMC_CURRENT_1 );
-			set_rms_current( &tmc_2, TMC_CURRENT_2 );
-			set_rms_current( &tmc_3, TMC_CURRENT_3 );
+			set_microstep_code( &tmc_0, rxData.microsteps[0] );
+			set_microstep_code( &tmc_1, rxData.microsteps[1] );
+			set_microstep_code( &tmc_2, rxData.microsteps[2] );
+			set_microstep_code( &tmc_3, rxData.microsteps[3] );
+
+			// these take about 1ms each
+			set_rms_current( &tmc_0, rxData.rmsCurrent[0] * 10 );
+			set_rms_current( &tmc_1, rxData.rmsCurrent[1] * 10 );
+			set_rms_current( &tmc_2, rxData.rmsCurrent[2] * 10 );
+			set_rms_current( &tmc_3, rxData.rmsCurrent[3] * 10 );
 		}
 
 		lastTMCUpdatesTime = servoThreadCount;
