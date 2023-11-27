@@ -62,13 +62,17 @@ The default values are 8x microstepping and 200mA current. Changes are made by s
     setp  weeny.tmc.0.microsteps  16
     setp  weeny.tmc.0.current     400
 
-Bridge the MS1/MS2 pins to set the address of each driver as desired. The example above will affect all drivers with both MS1 and MS2 left open.
+Bridge the MS1/MS2 pins to set the address of each driver as desired. The example above will affect all drivers with both MS1 and MS2 left open (address 0).
 
 Microsteps should be one of 0, 2, 4, 8, 16, 32, 63, 128, 256
 
 Current should be a value between 0-2000 (milliamps). Note that this is an approximate setting, as the TMC2209 can only control current in 32 distinct steps and will choose whatever is the closest value it can actually perform.
 
 Changes will be relayed to the drivers at a rate of once per second.
+
+This was tested with these drivers, which worked out of the box without needing any solder pads bridged. I also tried another variant which ignored all attempts to change settings via UART (and didn't appear to have any empty solder pads to bridge), so for now I can only recommend this MKS one.
+
+![alt text](https://www.iforce2d.net/tmp/mks.png)
 
 <br>
 
