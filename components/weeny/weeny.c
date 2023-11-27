@@ -82,12 +82,16 @@ typedef struct {
         hal_bit_t   	*rgb[RGB_BITS];
         hal_float_t 	*spindleSpeed[1];
         hal_float_t 	*adc[2]; // raw ADC values
+        hal_s32_t       *microsteps[JOINTS];
+        hal_s32_t       *rmsCurrent[JOINTS]; // use signed so that HAL configuration dialog shows eg. 200 instead of 0x000000c8
 } data_t;
 
 static data_t *data;
 
 typedef struct
 {
+        // this data goes from LinuxCNC to PRU
+
         int32_t header;                 // 4 bytes
         int32_t jointFreqCmd[JOINTS];   // 16 bytes
         uint8_t jointEnable;            // 1 byte
@@ -95,11 +99,16 @@ typedef struct
         uint8_t rgb[6];                 // 6 bytes (3 bits per LED x 16 LEDs = 48 bits)
         uint16_t spindleSpeed;          // 2 bytes
 
-        uint8_t dummy[11];              // make up to same size as rxData_t
+        uint8_t microsteps[JOINTS];     // 4 bytes
+        uint8_t rmsCurrent[JOINTS];     // 4 bytes
+
+        uint8_t dummy[3];               // make up to same size as rxData_t
 } txData_t;
 
 typedef struct
 {
+        // this data goes from PRU back to LinuxCNC
+
         int32_t header;                 // 4 bytes
         int32_t jointFeedback[JOINTS];  // 16 bytes
         int32_t jogcounts[4];           // 16 bytes
@@ -342,6 +351,18 @@ This is throwing errors from axis.py for some reason...
             retval = hal_pin_float_newf(HAL_OUT, &(data->adc[n]), comp_id, "%s.analog%01d.raw", prefix, n);
             if (retval < 0) goto error;
             *(data->adc[n]) = 0;
+        }
+
+        for (n = 0; n < JOINTS; n++) {
+            retval = hal_pin_s32_newf(HAL_IN, &(data->microsteps[n]), comp_id, "%s.tmc.%01d.microsteps", prefix, n);
+            if (retval < 0) goto error;
+            *(data->microsteps[n]) = 8;
+        }
+
+        for (n = 0; n < JOINTS; n++) {
+            retval = hal_pin_s32_newf(HAL_IN, &(data->rmsCurrent[n]), comp_id, "%s.tmc.%01d.current", prefix, n);
+            if (retval < 0) goto error;
+            *(data->rmsCurrent[n]) = 200;
         }
 
 //	for (n = 0; n < VARIABLES; n++) {
@@ -856,8 +877,8 @@ void spi_read()
 						curr_pos = (double)(accum[i]-STEP_OFFSET) * (1.0 / STEP_MASK);
                                                 *(data->pos_fb[i]) = (float)((curr_pos+0.5) / data->pos_scale[i]);
 
-                                                
-					}
+
+                                        }
 					
 					for (i = 0; i < 3; i++)
 						*(data->jogcounts[i]) = rxData.jogcounts[i];
@@ -936,6 +957,35 @@ void spi_write()
 			txData.jointEnable &= ~(1 << i);	
 		}
 	}
+
+        for (i = 0; i < JOINTS; i++)
+        {
+            uint8_t mstepsCode = 0xFF; // signifies no change, only allow values that make sense
+
+            switch( *(data->microsteps[i]) ) {
+              case 256: mstepsCode = 0; break;
+              case 128: mstepsCode = 1; break;
+              case  64: mstepsCode = 2; break;
+              case  32: mstepsCode = 3; break;
+              case  16: mstepsCode = 4; break;
+              case   8: mstepsCode = 5; break;
+              case   4: mstepsCode = 6; break;
+              case   2: mstepsCode = 7; break;
+              case   0: mstepsCode = 8; break;
+              default: break;
+            }
+
+            txData.microsteps[i] = mstepsCode;
+
+
+            int32_t c = *(data->rmsCurrent[i]);
+            if ( c < 0 )
+                c = 0;
+            else if ( c > 2000 )
+                c = 2000;
+            c /= 10; // to fit into one byte
+            txData.rmsCurrent[i] = (uint8_t)c;
+        }
 
 	// Set points
 //	for (i = 0; i < VARIABLES; i++)
