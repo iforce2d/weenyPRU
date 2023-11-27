@@ -12,6 +12,8 @@
 
 typedef struct
 {
+	// this data goes from LinuxCNC to PRU
+
     int32_t header;                 // 4 bytes
     int32_t jointFreqCmd[JOINTS];   // 16 bytes
     uint8_t jointEnable;            // 1 byte
@@ -19,11 +21,16 @@ typedef struct
     uint8_t rgb[6];                 // 6 bytes (3 bits per LED x 16 LEDs = 48 bits)
     uint16_t spindleSpeed;          // 2 bytes
 
-    uint8_t dummy[11];              // make up to same size as txData_t
+    uint8_t microsteps[JOINTS];     // 4 bytes
+    uint8_t rmsCurrent[JOINTS];     // 4 bytes
+
+    uint8_t dummy[3];              // make up to same size as txData_t
 } rxData_t;
 
 typedef struct
 {
+	// this data goes from PRU back to LinuxCNC
+
     int32_t header;                 // 4 bytes
     int32_t jointFeedback[JOINTS];  // 16 bytes
     int32_t jogcounts[4];      		// 16 bytes

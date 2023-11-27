@@ -37,6 +37,8 @@
 #define INVALID_REG_VALUE			0xFFFFFFFF
 #define CHOPCONF_DEFAULT_VALUE		0x10010053
 
+#define WRITE_REPEATS				3
+
 extern UART_HandleTypeDef huart1;
 
 void uartTransmit(uint8_t* buf, uint16_t size) {
@@ -137,24 +139,41 @@ void set_pdn_disable_and_mstep_reg_select(TMC_UART* u)	{
 //	}
 //}
 
-void set_mres( TMC_UART* u, uint8_t  B )	{
-	SET_REG_BITS(u->chopconf, CHOPCONF_MRES, B);
+void set_microstep_code( TMC_UART* u, uint8_t  v )	{
+
+	if ( v != u->lastWrittenMicrostepsCode )
+		u->microstepWriteRepeatsRemaining = WRITE_REPEATS;
+
+	if ( u->microstepWriteRepeatsRemaining < 1 )
+		return;
+
+	u->microstepWriteRepeatsRemaining--;
+	u->lastWrittenMicrostepsCode = v;
+
+	if ( v > 8 )
+		return;
+
+	SET_REG_BITS(u->chopconf, CHOPCONF_MRES, v);
 	write(u, CHOPCONF_ADDRESS, u->chopconf);
+
 }
 
-void set_microsteps(TMC_UART* u, uint16_t ms) {
-  switch(ms) {
-    case 256: set_mres(u, 0); break;
-    case 128: set_mres(u, 1); break;
-    case  64: set_mres(u, 2); break;
-    case  32: set_mres(u, 3); break;
-    case  16: set_mres(u, 4); break;
-    case   8: set_mres(u, 5); break;
-    case   4: set_mres(u, 6); break;
-    case   2: set_mres(u, 7); break;
-    case   0: set_mres(u, 8); break;
+void set_microsteps(TMC_UART* u, uint16_t msteps) {
+	uint8_t code = 0xFF; // invalid
+  switch(msteps) {
+    case 256: code = 0; break;
+    case 128: code = 1; break;
+    case  64: code = 2; break;
+    case  32: code = 3; break;
+    case  16: code = 4; break;
+    case   8: code = 5; break;
+    case   4: code = 6; break;
+    case   2: code = 7; break;
+    case   0: code = 8; break;
     default: break;
   }
+  if ( code != 0xFF )
+	  set_microstep_code(u, code);
 }
 
 void set_vsense( TMC_UART* u, uint8_t  v )	{
@@ -170,6 +189,14 @@ void set_irun_and_ihold( TMC_UART* u, uint8_t  R, uint8_t  H )	{
 }
 
 void set_rms_current(TMC_UART* u, uint16_t mA) {
+
+	if ( mA != u->lastWrittenCurrent )
+		u->currentWriteRepeatsRemaining = WRITE_REPEATS;
+
+	if ( u->currentWriteRepeatsRemaining < 1 )
+		return;
+
+	u->currentWriteRepeatsRemaining--;
 
 	float Rsense = 0.11f;
 	float holdMultiplier = 0.5;
@@ -188,6 +215,7 @@ void set_rms_current(TMC_UART* u, uint16_t mA) {
 		CS = 31;
 
 	set_irun_and_ihold(u, CS, CS*holdMultiplier);
+	u->lastWrittenCurrent = mA;
 }
 
 void initTMCUART(TMC_UART* u, uint8_t address, uint8_t microsteps, uint16_t mA)
@@ -195,6 +223,8 @@ void initTMCUART(TMC_UART* u, uint8_t address, uint8_t microsteps, uint16_t mA)
 	u->address = address;
 	u->gconf = 0;
 	u->chopconf = 0;
+	u->microstepWriteRepeatsRemaining = WRITE_REPEATS;
+	u->currentWriteRepeatsRemaining = WRITE_REPEATS;
 
 	set_pdn_disable_and_mstep_reg_select(u);
 	set_microsteps(u, microsteps);
