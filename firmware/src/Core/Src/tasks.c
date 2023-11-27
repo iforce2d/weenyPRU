@@ -6,21 +6,45 @@
 #include "led.h"
 #include "rgbled.h"
 #include "jog.h"
+#include "TMC2209.h"
 
 extern TIM_HandleTypeDef htim1;
 
 bool haveComms = false;
 
-Stepgen sg_x;
-Stepgen sg_y;
-Stepgen sg_z;
-Stepgen sg_a;
+Stepgen sg_0;
+Stepgen sg_1;
+Stepgen sg_2;
+Stepgen sg_3;
+
+TMC_UART tmc_0;
+TMC_UART tmc_1;
+TMC_UART tmc_2;
+TMC_UART tmc_3;
+
+#define TMC_MICROSTEPS_0	8
+#define TMC_MICROSTEPS_1	8
+#define TMC_MICROSTEPS_2	8
+#define TMC_MICROSTEPS_3	8
+
+#define TMC_CURRENT_0		200
+#define TMC_CURRENT_1		200
+#define TMC_CURRENT_2		200
+#define TMC_CURRENT_3		200
+
 
 void setupTasks() {
-	initStepgen(&sg_a, 0, GPIOA, GPIO_PIN_4, TIM_CHANNEL_1); // A: dir on PA4, step on PA0
-	initStepgen(&sg_z, 1, GPIOA, GPIO_PIN_5, TIM_CHANNEL_2); // Z: dir on PA5, step on PA1
-	initStepgen(&sg_y, 2, GPIOA, GPIO_PIN_6, TIM_CHANNEL_3); // Y: dir on PA6, step on PA2
-	initStepgen(&sg_x, 3, GPIOA, GPIO_PIN_7, TIM_CHANNEL_4); // X: dir on PA7, step on PA3
+	initStepgen(&sg_0, 0, GPIOA, GPIO_PIN_4, TIM_CHANNEL_1); // A: dir on PA4, step on PA0
+	initStepgen(&sg_1, 1, GPIOA, GPIO_PIN_5, TIM_CHANNEL_2); // Z: dir on PA5, step on PA1
+	initStepgen(&sg_2, 2, GPIOA, GPIO_PIN_6, TIM_CHANNEL_3); // Y: dir on PA6, step on PA2
+	initStepgen(&sg_3, 3, GPIOA, GPIO_PIN_7, TIM_CHANNEL_4); // X: dir on PA7, step on PA3
+
+	HAL_Delay(15); // TMCs take a while to wake up?
+
+	initTMCUART(&tmc_0, 0x00, TMC_MICROSTEPS_0, TMC_CURRENT_0);
+	initTMCUART(&tmc_1, 0x01, TMC_MICROSTEPS_1, TMC_CURRENT_1);
+	initTMCUART(&tmc_2, 0x02, TMC_MICROSTEPS_2, TMC_CURRENT_2);
+	initTMCUART(&tmc_3, 0x03, TMC_MICROSTEPS_3, TMC_CURRENT_3);
 }
 
 typedef struct PortAndPin {
@@ -48,7 +72,7 @@ PortAndPin digitalOuts[] = {
 	{ GPIOB, GPIO_PIN_9  }, // D14
 };
 
-int servoThreadCount = 0;
+uint32_t servoThreadCount = 0;
 
 void doServoThreadTasks() { // 1000Hz interrupt, return asap
 
@@ -85,10 +109,10 @@ void doServoThreadTasks() { // 1000Hz interrupt, return asap
 }
 
 void doBaseThreadTasks() { // 50kHz interrupt, no screwing around here!
-	prepStep(&sg_x);
-	prepStep(&sg_y);
-	prepStep(&sg_z);
-	prepStep(&sg_a);
+	prepStep(&sg_0);
+	prepStep(&sg_1);
+	prepStep(&sg_2);
+	prepStep(&sg_3);
 
 	TIM2->CNT = 0;
 }
@@ -141,20 +165,46 @@ void doMainLoopTasks() {
 	// Here we update the spindle PWM and the status LEDs. These tasks don't need to be done super fast, so spread
 	// them out such that one task is done about every 20ms (for two tasks, about 40ms between updates of each task)
 
-	int mod = servoThreadCount % 20; // about 50Hz
+	static int lastSlowUpdatesTime = 0;
 
-	if ( mod == 0 ) {
-		if ( haveComms ) {
-			updateRGBLEDs();
+	if ( lastSlowUpdatesTime != servoThreadCount ) {
+		int counter50Hz = servoThreadCount % 20; // about 50Hz
+
+		if ( counter50Hz == 0 ) {
+			if ( haveComms ) {
+				updateRGBLEDs();
+			}
+			else {
+				turnOffAllRGBLEDs();
+			}
+			doRGBLEDOutput();
 		}
-		else {
-			turnOffAllRGBLEDs();
+		else if ( counter50Hz == 10 ) {
+			int pwmCompare = (rxData.spindleSpeed / 65535.0f) * 3600;
+			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, pwmCompare);
 		}
-		doRGBLEDOutput();
+
+		lastSlowUpdatesTime = servoThreadCount;
 	}
-	else if ( mod == 10 ) {
-		int pwmCompare = (rxData.spindleSpeed / 65535.0f) * 3600;
-		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, pwmCompare);
+
+
+
+	// Update the Trinamic TMC2209 drivers if necessary
+
+	static int lastTMCUpdatesTime = 0;
+
+	if ( lastTMCUpdatesTime != servoThreadCount ) {
+
+		int counter5Hz = servoThreadCount % 1000; // about 1Hz
+
+		if ( counter5Hz == 0 ) {
+			set_rms_current( &tmc_0, TMC_CURRENT_0 ); // these take about 1ms each
+			set_rms_current( &tmc_1, TMC_CURRENT_1 );
+			set_rms_current( &tmc_2, TMC_CURRENT_2 );
+			set_rms_current( &tmc_3, TMC_CURRENT_3 );
+		}
+
+		lastTMCUpdatesTime = servoThreadCount;
 	}
 }
 
