@@ -59,7 +59,7 @@ PortAndPin digitalOuts[] = {
 	{ GPIOA, GPIO_PIN_15 }, // D8
 	{ GPIOB, GPIO_PIN_3  }, // D9
 	{ GPIOB, GPIO_PIN_4  }, // D10
-	{ GPIOB, GPIO_PIN_6  }, // D11
+	//{ GPIOB, GPIO_PIN_6  }, // D11
 	{ GPIOB, GPIO_PIN_7  }, // D12
 	{ GPIOB, GPIO_PIN_8  }, // D13
 	{ GPIOB, GPIO_PIN_9  }, // D14

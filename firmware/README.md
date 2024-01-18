@@ -4,6 +4,8 @@ This firmware targets a STM32F103C8T6 (72MHz clock, 64kb flash, 20kb RAM). It wi
 
 The project was created with STM32CubeIDE so it should be importable with that IDE. If this does not work, let me know if there are any missing files I need to add.
 
+Note that a debug build will not be fast enough for high step rates, and will also probably cause the SPI connection with the RPi to drop out frequently.
+
 ## Hardware pins
 
 The 'TMC2209' pre-built binary dedicates PB6 as a UART TX pin and is what the current source code will build. The pin layout below is for this version.
