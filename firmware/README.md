@@ -1,6 +1,6 @@
 # weenyPRU firmware
 
-This firmware targets a STM32F103C8T6 (72MHz clock, 64kb flash, 20kb RAM). It will probably also work on other F1 chips with equal or greater flash and RAM spec.
+This firmware targets a STM32F103C8T6 (72MHz clock, 64kb flash, 20kb RAM). It will probably also work on other F1 chips with equal or greater spec.
 
 The project was created with STM32CubeIDE so it should be importable with that IDE. If this does not work, let me know if there are any missing files I need to add.
 
@@ -8,7 +8,7 @@ Note that a debug build will not be fast enough for high step rates, and will al
 
 ## Hardware pins
 
-The 'TMC2209' pre-built binary dedicates PB6 as a UART TX pin and is what the current source code will build. The pin layout below is for this version.
+The 'tmc2209' pre-built binary dedicates PB6 as a UART TX pin and is what the current source code will build. The pin layout below is for this version.
 
 The 'default' pre-built binary is a legacy build made before TMC2209 UART support was added. It shares the 14 digital I/O equally between input and output. You can share these pins differently between input and output by editing tasks.c (move pins between the digitalIns and digitalOuts arrays). The pin layout below also applies for this version except that PB6-PB9 map to D11-D14.
 
