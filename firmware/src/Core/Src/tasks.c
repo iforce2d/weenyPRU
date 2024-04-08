@@ -1,5 +1,6 @@
 
 #include "tasks.h"
+#include "config.h"
 #include "comms.h"
 #include "digitalout.h"
 #include "stepgen.h"
@@ -7,6 +8,7 @@
 #include "rgbled.h"
 #include "jog.h"
 #include "TMC2209.h"
+#include "XGZP.h"
 
 extern TIM_HandleTypeDef htim1;
 
@@ -26,10 +28,10 @@ TMC_UART tmc_3;
 #define TMC_DEFAULT_CURRENT		200		// 0 - 2000
 
 void setupTasks() {
-	initStepgen(&sg_0, 0, GPIOA, GPIO_PIN_4, TIM_CHANNEL_1); // A: dir on PA4, step on PA0
+	initStepgen(&sg_0, 3, GPIOA, GPIO_PIN_4, TIM_CHANNEL_1); // A: dir on PA4, step on PA0
 	initStepgen(&sg_1, 1, GPIOA, GPIO_PIN_5, TIM_CHANNEL_2); // Z: dir on PA5, step on PA1
 	initStepgen(&sg_2, 2, GPIOA, GPIO_PIN_6, TIM_CHANNEL_3); // Y: dir on PA6, step on PA2
-	initStepgen(&sg_3, 3, GPIOA, GPIO_PIN_7, TIM_CHANNEL_4); // X: dir on PA7, step on PA3
+	initStepgen(&sg_3, 0, GPIOB, GPIO_PIN_5, TIM_CHANNEL_4); // X: dir on PA7, step on PA3
 
 	HAL_Delay(15); // TMCs take a while to wake up?
 
@@ -61,8 +63,10 @@ PortAndPin digitalOuts[] = {
 	{ GPIOB, GPIO_PIN_4  }, // D10
 	//{ GPIOB, GPIO_PIN_6  }, // D11
 	{ GPIOB, GPIO_PIN_7  }, // D12
+#ifndef USE_I2C // PB8 and PB9 are I2C1
 	{ GPIOB, GPIO_PIN_8  }, // D13
 	{ GPIOB, GPIO_PIN_9  }, // D14
+#endif
 };
 
 uint32_t servoThreadCount = 0;
@@ -91,8 +95,15 @@ void doServoThreadTasks() { // 1000Hz interrupt, return asap
 
 	packetCount = 0;
 
-	if ( servoThreadCount % 10 == 0 ) {// 100Hz
+	int counter100Hz = servoThreadCount % 10; // 100Hz
+
+	if ( counter100Hz == 0 ) {
 		doJogUpdate();
+	}
+	else if ( counter100Hz == 5 ) {
+#ifdef USE_I2C
+		//updateXGZP();
+#endif
 	}
 
 	for (int i = 0; i < (sizeof(digitalOuts)/sizeof(PortAndPin)); i++) {
@@ -141,6 +152,7 @@ void doMainLoopTasks() {
 
 	if ( lastDigitalInputRead != servoThreadCount ) {
 
+		// read digital inputs
 		for (int i = 0; i < (sizeof(digitalIns)/sizeof(PortAndPin)); i++) {
 			PortAndPin pap = digitalIns[i];
 			int digitalInput = HAL_GPIO_ReadPin(pap.port, pap.pin);
@@ -164,13 +176,11 @@ void doMainLoopTasks() {
 		int counter50Hz = servoThreadCount % 20; // 50Hz
 
 		if ( counter50Hz == 0 ) {
-			if ( haveComms ) {
+			if ( haveComms )
 				updateRGBLEDs();
-			}
-			else {
+			else
 				turnOffAllRGBLEDs();
-			}
-			doRGBLEDOutput();
+			doRGBLEDOutput(); // DMA, takes a little time. I2C1 must not be enabled during this phase.
 		}
 		else if ( counter50Hz == 10 ) {
 			int pwmCompare = (rxData.spindleSpeed / 65535.0f) * 3600;
@@ -180,6 +190,16 @@ void doMainLoopTasks() {
 		lastSlowUpdatesTime = servoThreadCount;
 	}
 
+
+	// Update pressure sensor at about 100Hz
+#ifdef USE_I2C
+	static int pressureUpdateCounter = 0;
+
+	if ( pressureUpdateCounter++ > 10 ) {
+		updateXGZP();
+		pressureUpdateCounter = 0;
+	}
+#endif
 
 
 	// Update the Trinamic TMC2209 drivers if necessary
