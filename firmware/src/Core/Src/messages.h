@@ -24,8 +24,8 @@ typedef struct
     uint8_t microsteps[JOINTS];     // 4 bytes
     uint8_t rmsCurrent[JOINTS];     // 4 bytes
 
-    uint8_t dummy[3];              // make up to same size as txData_t
-} rxData_t;
+    uint8_t dummy[5];              // make up to same size as txData_t
+} __packed rxData_t;
 
 typedef struct
 {
@@ -36,8 +36,9 @@ typedef struct
     int32_t jogcounts[4];      		// 16 bytes
     uint16_t inputs;                // 2 bytes
     uint16_t adc[2];				// 4 bytes
+    uint16_t vacuum;				// 2 bytes
 
-} txData_t;
+} __packed txData_t;
 
 
 typedef union

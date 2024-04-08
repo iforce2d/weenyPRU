@@ -21,7 +21,10 @@ void commsStart() {
 	rxData.jointEnable = 0;
 	rxData.outputs = 0;
 	incomingSPIBuffer.header = 0;
+
 	memset((uint8_t*)&txData, 0, sizeof(txData_t));
+	//txData.vacuum = (0 * 500) + 50000;
+
     txData.header = PRU_DATA;
     HAL_SPI_TransmitReceive_DMA(&hspi2, (uint8_t*)&txData, (uint8_t*)&incomingSPIBuffer, sizeof(commPacket_t));
 }
@@ -65,12 +68,36 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi) {
 
     incomingSPIBuffer.header = 0;
 
+
     // Even though the transmission should be complete (we are in the completion callback here!), sometimes
     // the DMA was not returned to idle state resulting in the subsequent call to HAL_SPI_TransmitReceive_DMA
     // failing, causing the SPI connection to drop and a "Bad SPI payload" message on the LinuxCNC side.
     // This (mis-named) HAL_DMA_PollForTransfer ensures the DMA returns to the ready state.
     // https://github.com/STMicroelectronics/STM32CubeF1/issues/14
-    HAL_DMA_PollForTransfer(hspi2.hdmatx, HAL_DMA_FULL_TRANSFER, 1);
+    if ( HAL_DMA_STATE_BUSY == hspi2.hdmatx->State ) {
+		HAL_StatusTypeDef ret = HAL_DMA_PollForTransfer(hspi2.hdmatx, HAL_DMA_FULL_TRANSFER, HAL_MAX_DELAY);
+		if ( HAL_OK != ret ) {
+			Error_Handler();
+		}
+    }
+    if ( HAL_DMA_STATE_BUSY == hspi2.hdmarx->State ) {
+		HAL_StatusTypeDef ret = HAL_DMA_PollForTransfer(hspi2.hdmarx, HAL_DMA_FULL_TRANSFER, HAL_MAX_DELAY);
+		if ( HAL_OK != ret ) {
+			Error_Handler();
+		}
+    }
+
+
+    // If the master sends transactions too quickly our reply will become invalid and the whole cycle gets
+    // messed up, to the point where the SPI connection no longer responds. This is ugly but will prevent
+    // the PRU from needing a restart.
+    __HAL_RCC_SPI2_FORCE_RESET();
+    __HAL_RCC_SPI2_RELEASE_RESET();
+    if (HAL_SPI_Init(&hspi2) != HAL_OK)
+    {
+      Error_Handler();
+    }
+
 
     HAL_SPI_TransmitReceive_DMA(&hspi2, (uint8_t*)&txData, (uint8_t*)&incomingSPIBuffer, sizeof(commPacket_t));
 }

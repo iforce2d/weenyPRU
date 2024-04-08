@@ -10,18 +10,18 @@ void HAL_SPI_MspInit_rgbled(SPI_HandleTypeDef* hspi) {
 	GPIO_InitTypeDef GPIO_InitStruct = {0};
 
 	__HAL_RCC_SPI1_CLK_ENABLE();
-	__HAL_RCC_GPIOB_CLK_ENABLE();
+	__HAL_RCC_GPIOA_CLK_ENABLE();
 
 	//SPI1 GPIO Configuration
-	//PB3     ------> SPI1_SCK
-	//PB5     ------> SPI1_MOSI
+	//PA5     ------> SPI1_SCK
+	//PA7     ------> SPI1_MOSI
 
-	GPIO_InitStruct.Pin = GPIO_PIN_5;
+	GPIO_InitStruct.Pin = GPIO_PIN_7;
 	GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-    __HAL_AFIO_REMAP_SPI1_ENABLE();
+    //__HAL_AFIO_REMAP_SPI1_ENABLE();
 
 	hdma_spi1_tx.Instance = DMA1_Channel3;
 	hdma_spi1_tx.Init.Direction = DMA_MEMORY_TO_PERIPH;
