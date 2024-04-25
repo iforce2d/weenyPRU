@@ -183,7 +183,7 @@ void doMainLoopTasks() {
 			doRGBLEDOutput(); // DMA, takes a little time. I2C1 must not be enabled during this phase.
 		}
 		else if ( counter50Hz == 10 ) {
-			int pwmCompare = (rxData.spindleSpeed / 65535.0f) * 3600;
+			int pwmCompare = haveComms ? ((rxData.spindleSpeed / 65535.0f) * 3600) : 0;
 			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, pwmCompare);
 		}
 
