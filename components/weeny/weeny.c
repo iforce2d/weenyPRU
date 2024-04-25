@@ -71,9 +71,9 @@ typedef struct {
 	float 			old_pos_cmd[JOINTS];		// previous position command (counts)
 	float 			old_pos_cmd_raw[JOINTS];		// previous position command (counts)
 	float 			old_scale[JOINTS];			// stored scale value
-	float 			scale_recip[JOINTS];		// reciprocal value used for scaling
+        //float 			scale_recip[JOINTS];		// reciprocal value used for scaling
 	float			prev_cmd[JOINTS];
-	float			cmd_d[JOINTS];					// command derivative
+        //float			cmd_d[JOINTS];					// command derivative
         //hal_float_t 	*setPoint[VARIABLES];
         //hal_float_t 	*processVariable[VARIABLES];
         hal_s32_t       *jogcounts[3];          // analog0, analog1, rotary encoder
@@ -84,11 +84,12 @@ typedef struct {
         hal_float_t 	*adc[2]; // raw ADC values
         hal_s32_t       *microsteps[JOINTS];
         hal_s32_t       *rmsCurrent[JOINTS]; // use signed so that HAL configuration dialog shows eg. 200 instead of 0x000000c8
+        hal_float_t     *pressure;
 } data_t;
 
 static data_t *data;
 
-typedef struct
+typedef struct __attribute__((__packed__))
 {
         // this data goes from LinuxCNC to PRU
 
@@ -102,10 +103,10 @@ typedef struct
         uint8_t microsteps[JOINTS];     // 4 bytes
         uint8_t rmsCurrent[JOINTS];     // 4 bytes
 
-        uint8_t dummy[3];               // make up to same size as rxData_t
+        uint8_t dummy[5];               // make up to same size as rxData_t
 } txData_t;
 
-typedef struct
+typedef struct __attribute__((__packed__))
 {
         // this data goes from PRU back to LinuxCNC
 
@@ -114,6 +115,8 @@ typedef struct
         int32_t jogcounts[4];           // 16 bytes
         uint16_t inputs;                // 2 bytes
         uint16_t adc[2];		// 4 bytes
+        uint16_t pressure;		// 2 bytes
+
 } rxData_t;
 
 typedef union
@@ -364,6 +367,10 @@ This is throwing errors from axis.py for some reason...
             if (retval < 0) goto error;
             *(data->rmsCurrent[n]) = 200;
         }
+
+        retval = hal_pin_float_newf(HAL_OUT, &(data->pressure), comp_id, "%s.pressure.%01d", prefix, 0);
+        if (retval < 0) goto error;
+        *(data->pressure) = 200;
 
 //	for (n = 0; n < VARIABLES; n++) {
 //	// export pins
@@ -654,12 +661,12 @@ void update_freq(void *arg, long period)
 				data->pos_scale[i] = 1.0;										// value too small, divide by zero is a bad thing
 				// we will need the reciprocal, and the accum is fixed point with
 				//fractional bits, so we precalc some stuff
-			data->scale_recip[i] = (1.0 / STEP_MASK) / data->pos_scale[i];
+                        //data->scale_recip[i] = (1.0 / STEP_MASK) / data->pos_scale[i];
 		}
 
 		// calculate frequency limit
 		//max_freq = PRU_BASEFREQ/(4.0); 			//limit of DDS running at 80kHz
-                max_freq = PRU_BASEFREQ; // /(2.0);
+                max_freq = PRU_BASEFREQ /(2.0);
 
 
 		// check for user specified frequency limit parameter
@@ -770,13 +777,14 @@ void update_freq(void *arg, long period)
 			}
 			
 			// calcuate command and derivatives
-			data->cmd_d[i] = (command - data->prev_cmd[i]) * periodrecip;
+                        //data->cmd_d[i] = (command - data->prev_cmd[i]) * periodrecip;
+                        float cmd_d = (command - data->prev_cmd[i]) * periodrecip;
 			
 			// save old values
 			data->prev_cmd[i] = command;
 				
 			// calculate the output value
-			vel_cmd = pgain * error + data->cmd_d[i] * ff1gain;
+                        vel_cmd = pgain * error + cmd_d * ff1gain;
 		
 		} else {
 
@@ -828,6 +836,8 @@ void update_freq(void *arg, long period)
 }
 
 
+float lastVac = -123;
+
 void spi_read()
 {
 	int i;
@@ -873,10 +883,9 @@ void spi_read()
 
 						*(data->count[i]) = accum[i] >> STEPBIT;
 
-						data->scale_recip[i] = (1.0 / STEP_MASK) / data->pos_scale[i];
+                                                //data->scale_recip[i] = (1.0 / STEP_MASK) / data->pos_scale[i];
 						curr_pos = (double)(accum[i]-STEP_OFFSET) * (1.0 / STEP_MASK);
                                                 *(data->pos_fb[i]) = (float)((curr_pos+0.5) / data->pos_scale[i]);
-
 
                                         }
 					
@@ -904,6 +913,13 @@ void spi_read()
                                                         *(data->inputs[i]) = 0;			// input is low
                                                 }
                                         }
+
+                                        float vac = ((float)rxData.pressure - 50000) / 500.0f;
+                                        *(data->pressure) = vac;
+//                                        if ( vac != lastVac ) {
+//                                            rtapi_print("pressure = %d (%f)\n", rxData.pressure, vac);
+//                                            lastVac = vac;
+//                                        }
 
 					break;
 					
