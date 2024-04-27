@@ -52,10 +52,7 @@ The WS2812 protocol is used to control up to 16 addressable RGB LEDs on PB5. Alt
 
 ## About TMC2209 UART control
 
-Trinamic TMC2209 stepper drivers can be controlled via UART to alter microstep and RMS current settings. To do this:
-
-- (v1.1 board) connect D11 to any of the 'UART' pins (side nearest the stepper driver), and add a 1k resistor pullup to VCC.
-- (v1.2 board) bridge the 'UART' jumper
+On a v1.2 board, Trinamic TMC2209 stepper drivers can be controlled via UART to alter microstep and RMS current settings. To do this, bridge the 'UART' jumper. This also requires that UART control is enabled in the firmware (which is the default for the pre-built 'v1.2' binary).
 
 The default values are 8x microstepping and 200mA current. Changes are made by setting pin values, eg.
 
@@ -76,9 +73,16 @@ This was tested with these drivers, which worked out of the box without needing 
 
 <br>
 
-## About debug builds
+## About I2C pressure sensor
 
-The STM32F103C8 seems to struggle with this workload when running a debug build, and you may find the SPI connection occasionally dropping. With a release build though, I've had it running fine for 3 weeks at a time without any loss of communication.
+On a v1.2 board, you can read values from a XGZP I2C pressure sensor. To do this, bridge ***both*** the 'I2C' jumpers, which will connect pullups to pins D13 and D14. This also requires that XGZP usage is enabled in the firmware (which is the default for the pre-built 'v1.2' binary).
+
+You can then connect your XGZP sensor with:
+
+ - D13 --> SCL
+ - D14 --> SDA
+
+The pressure value will appear as the HAL pin 'weeny.pressure.0' in units of kPa, with update rate of about 100Hz.
 
 <br>
 
@@ -88,49 +92,24 @@ To install the LinuxCNC component, invoke halcompile from the components/weeny f
 
 `sudo halcompile --install weeny.c`
 
-<br>
+These pins are created by the component:
 
-## HAL pins
+- weeny.input.00 - weeny.input.15
+- weeny.output.00 - weeny.output.15
+- weeny.analogN.raw
+- weeny.analogN.jogcounts
+- weeny.encoder.jogcounts
+- weeny.spindle.set-speed
+- weeny.rgb.led00.red / green / blue
+- weeny.tmc.N.microsteps
+- weeny.tmc.N.current
+- weeny.pressure.0
 
-Note that even though the default firmware only has a total of 14 pins for digital I/O, there are 16 digital pins each for input and output in the HAL settings. This is mainly because the messaging between Raspberry Pi and the PRU uses uint16 types to hold these values. In future the extra 2 bits might be useful if for example, two more digital I/O were needed instead of a rotary encoder.
-
-### weeny.input.00 - weeny.input.15
-
-Returns the value of digital inputs (as assigned in tasks.c)
-
-### weeny.output.00 - weeny.output.15
-
-Sets the value of digital outputs (as assigned in tasks.c)
-
-### weeny.analogN.raw
-
-Returns the raw (floating point 0-1) value on PB0/PB1
-
-### weeny.analogN.jogcounts
-
-Returns a value that will be incremented or decremented by moving the analog input on PB0/PB1 away from center. The speed of change will be faster when further from center.
-
-### weeny.encoder.jogcounts
-
-Returns a value that will be incremented or decremented by moving a rotary encoder on PC14/PC15
-
-### weeny.spindle.set-speed
-
-Sets the duty cycle of the PWM pulse on PA8. This takes a value from 0-65535, where 65535 will result in an always-high pulse.
-
-### weeny.rgb.led00.red / green / blue
-
-Sets the red/green/blue component to on or off in the RGB LED of the given index.
-
-### weeny.tmc.N.microsteps
-
-Sets the microstep resolution for a TMC2209 stepper driver at address N. Values other than 0, 2, 4, 8, 16, 32, 63, 128, 256 will be ignored.
-
-### weeny.tmc.N.current
-
-Sets the (approximate) RMS current in milliamps for a TMC2209 stepper driver at address N. Values outside the range 0-2000 will be ignored.
+See [components](../components/README.md) for more info.
 
 <br>
+
+
 
 <br>
 <br>

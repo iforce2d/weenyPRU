@@ -1,7 +1,7 @@
 
 #include "config.h"
 
-#ifdef USE_I2C
+#ifdef USE_I2C_XGZP
 
 #include "main.h"
 #include "i2c.h"

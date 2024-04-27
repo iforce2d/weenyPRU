@@ -9,6 +9,7 @@
 #include "jog.h"
 #include "TMC2209.h"
 #include "XGZP.h"
+#include "config.h"
 
 extern TIM_HandleTypeDef htim1;
 
@@ -33,19 +34,30 @@ void setupTasks() {
 	initStepgen(&sg_2, 2, GPIOA, GPIO_PIN_6, TIM_CHANNEL_3); // Y: dir on PA6, step on PA2
 	initStepgen(&sg_3, 0, GPIOB, GPIO_PIN_5, TIM_CHANNEL_4); // X: dir on PA7, step on PA3
 
+#ifdef USE_UART_TMC
 	HAL_Delay(15); // TMCs take a while to wake up?
 
 	initTMCUART(&tmc_0, 0x00, TMC_DEFAULT_MICROSTEPS, TMC_DEFAULT_CURRENT);
 	initTMCUART(&tmc_1, 0x01, TMC_DEFAULT_MICROSTEPS, TMC_DEFAULT_CURRENT);
 	initTMCUART(&tmc_2, 0x02, TMC_DEFAULT_MICROSTEPS, TMC_DEFAULT_CURRENT);
 	initTMCUART(&tmc_3, 0x03, TMC_DEFAULT_MICROSTEPS, TMC_DEFAULT_CURRENT);
-
+#endif
 }
 
 typedef struct PortAndPin {
 	GPIO_TypeDef* port;
 	uint16_t pin;
 } PortAndPin;
+
+// You can move these rows between the input and output arrays to allocate
+// pins between input and output as desired. The order they appear here is
+// the order that LinuxCNC will refer to them as. Eg. the first row in the
+// digitalIns array will become weeny.input.00
+//
+// The labels D1, D2 etc are the silkscreen labels on the weenyPRU board.
+//
+// If using UART control for TMC drivers, or I2C for pressure sensor, the
+// rows for those relevant pins must not be included in these arrays.
 
 PortAndPin digitalIns[] = {
 	{ GPIOB, GPIO_PIN_2  }, // D1
@@ -61,11 +73,13 @@ PortAndPin digitalOuts[] = {
 	{ GPIOA, GPIO_PIN_15 }, // D8
 	{ GPIOB, GPIO_PIN_3  }, // D9
 	{ GPIOB, GPIO_PIN_4  }, // D10
-	//{ GPIOB, GPIO_PIN_6  }, // D11
-	{ GPIOB, GPIO_PIN_7  }, // D12
-#ifndef USE_I2C // PB8 and PB9 are I2C1
-	{ GPIOB, GPIO_PIN_8  }, // D13
-	{ GPIOB, GPIO_PIN_9  }, // D14
+	{ GPIOB, GPIO_PIN_7  }, // D11
+#ifndef USE_UART_TMC
+	{ GPIOB, GPIO_PIN_6  }, // D12 or TMC_UART
+#endif
+#ifndef USE_I2C_XGZP
+	{ GPIOB, GPIO_PIN_8  }, // D13 or I2C1_SCL
+	{ GPIOB, GPIO_PIN_9  }, // D14 or I2C1_SDA
 #endif
 };
 
@@ -100,11 +114,9 @@ void doServoThreadTasks() { // 1000Hz interrupt, return asap
 	if ( counter100Hz == 0 ) {
 		doJogUpdate();
 	}
-	else if ( counter100Hz == 5 ) {
-#ifdef USE_I2C
-		//updateXGZP();
-#endif
-	}
+//	else if ( counter100Hz == 5 ) {
+//
+//	}
 
 	for (int i = 0; i < (sizeof(digitalOuts)/sizeof(PortAndPin)); i++) {
 		PortAndPin pap = digitalOuts[i];
@@ -192,7 +204,7 @@ void doMainLoopTasks() {
 
 
 	// Update pressure sensor at about 100Hz
-#ifdef USE_I2C
+#ifdef USE_I2C_XGZP
 	static int pressureUpdateCounter = 0;
 
 	if ( pressureUpdateCounter++ > 10 ) {
@@ -203,7 +215,7 @@ void doMainLoopTasks() {
 
 
 	// Update the Trinamic TMC2209 drivers if necessary
-
+#ifdef USE_UART_TMC
 	static int lastTMCUpdatesTime = 0;
 
 	if ( lastTMCUpdatesTime != servoThreadCount ) { // make sure we don't do this multiple times inside one servo thread loop
@@ -224,5 +236,7 @@ void doMainLoopTasks() {
 
 		lastTMCUpdatesTime = servoThreadCount;
 	}
+#endif
+
 }
 

@@ -22,6 +22,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "config.h"
 #include "led.h"
 #include "core.h"
 #include "TMC2209.h"
@@ -290,7 +291,9 @@ static void MX_I2C1_Init(void)
 {
 
   /* USER CODE BEGIN I2C1_Init 0 */
-
+#ifndef USE_I2C_XGZP
+	return; // leave PB8,PB9 available for digital I/O
+#endif
   /* USER CODE END I2C1_Init 0 */
 
   /* USER CODE BEGIN I2C1_Init 1 */
@@ -589,7 +592,9 @@ static void MX_USART1_UART_Init(void)
 {
 
   /* USER CODE BEGIN USART1_Init 0 */
-
+#ifndef USE_UART_TMC
+	return; // leave PB6 available for digital I/O
+#endif
   /* USER CODE END USART1_Init 0 */
 
   /* USER CODE BEGIN USART1_Init 1 */
