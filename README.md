@@ -8,7 +8,7 @@ The firmware for the realtime unit targets STM32F103C8 aka 'Blue Pill'. Source c
 
 Unlike Remora, this firmware is not conveniently configurable by SD card, so all modifications will need to be changed in the source code.
 
-Tested on Raspberry Pi 3B, 3B+ and ZeroW with 4.19.71 PREEMPT, LinuxCNC 2.8.4
+Tested on Raspberry Pi 3B, 3B+, 4B and ZeroW with 4.19.71 PREEMPT, LinuxCNC 2.8.4
 
 <br>
 
@@ -22,6 +22,7 @@ Tested on Raspberry Pi 3B, 3B+ and ZeroW with 4.19.71 PREEMPT, LinuxCNC 2.8.4
 - one rotary encoder (slow for manual jogging etc, not for closed loop motor control!)
 - WS2812 style RGB LED strip (up to 16) controllable from HAL
 - TMC2209 stepper driver control from HAL (microstep and current)
+- XGZP (I2C) pressure sensor reading
 
 
 <br>
