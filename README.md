@@ -126,7 +126,7 @@ These pins are created by the component:
 - weeny.tmc.N.current
 - weeny.pressure.0
 
-See [components](../components/README.md) for more info.
+See [components](components/README.md) for more info.
 
 <br>
 
