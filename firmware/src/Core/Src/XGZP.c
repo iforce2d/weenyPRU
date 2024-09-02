@@ -82,16 +82,16 @@ void updateXGZP() {
 	txData.vacuum = (uint16_t)v;
 }
 
-void updateXGZP_() {
-	// SPI1 MOSI for RGBLED on PB5 will not work while I2C1 is enabled, wtf !?
-	// https://community.st.com/t5/stm32cubemx-mcus/stm32f103-no-mosi-output-on-spi1-when-using-i2c1-with-cubemx/td-p/456788
-	__HAL_RCC_I2C1_CLK_ENABLE();
-	__HAL_I2C_ENABLE(&XGZP_I2C_BUS);
-
-	updateXGZP_();
-
-	__HAL_I2C_DISABLE(&XGZP_I2C_BUS);
-	__HAL_RCC_I2C1_CLK_DISABLE();
-}
+//void updateXGZP_() {
+//	// SPI1 MOSI for RGBLED on PB5 will not work while I2C1 is enabled, wtf !?
+//	// https://community.st.com/t5/stm32cubemx-mcus/stm32f103-no-mosi-output-on-spi1-when-using-i2c1-with-cubemx/td-p/456788
+//	__HAL_RCC_I2C1_CLK_ENABLE();
+//	__HAL_I2C_ENABLE(&XGZP_I2C_BUS);
+//
+//	updateXGZP_();
+//
+//	__HAL_I2C_DISABLE(&XGZP_I2C_BUS);
+//	__HAL_RCC_I2C1_CLK_DISABLE();
+//}
 
 #endif

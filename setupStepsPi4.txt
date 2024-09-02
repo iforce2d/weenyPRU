@@ -1,0 +1,27 @@
+
+Download disk image for Pi4 from here:
+https://www.forum.linuxcnc.org/9-installing-linuxcnc/51175-linuxcnc-2-9-2-and-2-93-images-for-raspberry-pi-4b-5
+
+rpi-4-debian-bookworm-6.6.44-rt39-arm64-ext4-2024-08-12-2149.img.xz
+
+Login credentials are cnc/cnc
+
+Run 'sudo menu-config' to set up WiFi access.
+
+git clone https://github.com/iforce2d/weenyPRU.git
+cd weenyPRU/components/weeny
+sudo halcompile --install weeny.c
+cd ../..
+
+cd configsamples/weeny-xyza
+linuxcnc weeny-xyza.ini
+
+To use external RTL8192EU WiFi dongle:
+    sudo rm /etc/modprobe.d/blacklist-rtl8xxxu.conf
+    sudo reboot now
+    (after reboot)
+    sudo menu-config (again, to activate the new connection)
+
+To disable the onboard WiFi, in the Edit Connection dialog of the menu-config tool, at the bottom uncheck 'Automatically connect' by pressing space bar.
+
+
