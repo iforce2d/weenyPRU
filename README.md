@@ -25,6 +25,7 @@ Tested on Raspberry 4B with 6.6.44 PREEMPT_RT, LinuxCNC 2.9.3 (see setupStepsPi4
 - WS2812 style RGB LED strip (up to 16) controllable from HAL
 - TMC2209 stepper driver control from HAL (microstep and current)
 - XGZP (I2C) pressure sensor reading
+- DS3502 (I2C) digital potentiometer control
 
 
 <br>
