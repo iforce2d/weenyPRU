@@ -291,7 +291,7 @@ static void MX_I2C1_Init(void)
 {
 
   /* USER CODE BEGIN I2C1_Init 0 */
-#ifndef USE_I2C_XGZP
+#if !(defined(USE_I2C_XGZP) || defined(USE_I2C_DS3502))
 	return; // leave PB8,PB9 available for digital I/O
 #endif
   /* USER CODE END I2C1_Init 0 */

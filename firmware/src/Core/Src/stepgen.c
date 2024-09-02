@@ -19,6 +19,8 @@ void initStepgen(
 		uint16_t dirPin,
 		uint32_t stepTimerChannel)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Waddress-of-packed-member"
 	sg->jointNumber = jointNumber;
 	sg->dirPort = dirPort;
 	sg->dirPin = dirPin;
@@ -26,6 +28,7 @@ void initStepgen(
 	sg->ptrFrequencyCommand = &rxData.jointFreqCmd[jointNumber];
 	sg->ptrFeedback = &txData.jointFeedback[jointNumber];
 	sg->DDSaccumulator = 0;
+#pragma GCC diagnostic pop
 }
 
 void prepStep(Stepgen* sg)

@@ -39,6 +39,9 @@ void doSetup() {
 	LED_OFF;
 	initRotaryEncoder();
 	initRGBLED();
+#ifdef USE_I2C_DS3502
+	initDS3502();
+#endif
 	setupTasks();
 	commsStart();
 	threadsStart();

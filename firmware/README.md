@@ -10,7 +10,7 @@ Note that a debug build will not be fast enough for high step rates, and will pr
 
 You can allocate the digital I/O pins between input and output by editing the 'digitalIns' and 'digitalOuts' arrays in tasks.c, see the comments there for details.
 
-In v1.2 support was added for UART control of TMC2209 stepper drivers, and a XGZP pressure sensor over I2C.
+In v1.2 support was added for UART control of TMC2209 stepper drivers, and a XGZP pressure sensor over I2C. In v1.3 support was added for a DS3502 digital potentiometer over I2C.
 
 To use UART control of the onboard TMC drivers:
 - define USE_UART_TMC in config.h
@@ -18,6 +18,10 @@ To use UART control of the onboard TMC drivers:
 
 To enable XGZP pressure sensor:
 - define USE_I2C_XGZP in config.h
+- close ***both*** 'I2C' jumpers to connect D13 and D14 to pullup resistors
+
+To enable DS3502 digital potentiometer:
+- define USE_I2C_DS3502 in config.h
 - close ***both*** 'I2C' jumpers to connect D13 and D14 to pullup resistors
 
 When these are enabled, naturally the related pins can no longer be used for regular digital I/O.
@@ -29,7 +33,12 @@ See the [main page](../README.md) for further info on TMC2209 setup.
 
 The 'legacy' pre-built binary was made before TMC2209 UART support was added, and will only function correctly on a pre-v1.2 board. It shares the 14 digital I/O equally between input and output. That is, pins D1-D7 are inputs, and D8-D14 are outputs.
 
-The 'v1.2' pre-built binary enables both UART TMC and I2C XGZP. 
+The 'v1.2' pre-built binary enables UART TMC and I2C XGZP. 
+
+The 'v1.3' pre-built binary enables UART TMC and I2C DS3502.
+
+(These version numbers are for the firmware, not the board hardware.)
+
 
 ## Pin mappings
 
@@ -71,9 +80,7 @@ The 'v1.2' pre-built binary enables both UART TMC and I2C XGZP.
 
 ### Digital outputs
 <table>
-<tr><td>PA8</td><td>PWM</td></tr>
-
-<tr><td> PA15 </td><td>D8</td></tr>
+<tr><td>PA15</td><td>D8</td></tr>
 <tr><td>PB3</td><td>D9 </td></tr>
 <tr><td>PB4</td><td>D10 </td></tr>
 <tr><td>PB7</td><td>D11 </td></tr>

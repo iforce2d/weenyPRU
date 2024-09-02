@@ -94,4 +94,4 @@ void updateXGZP() {
 //	__HAL_RCC_I2C1_CLK_DISABLE();
 //}
 
-#endif
+#endif // USE_I2C_XGZP

@@ -9,6 +9,7 @@
 #include "jog.h"
 #include "TMC2209.h"
 #include "XGZP.h"
+#include "DS3502.h"
 #include "config.h"
 
 extern TIM_HandleTypeDef htim1;
@@ -77,7 +78,7 @@ PortAndPin digitalOuts[] = {
 #ifndef USE_UART_TMC
 	{ GPIOB, GPIO_PIN_6  }, // D12 or TMC_UART
 #endif
-#ifndef USE_I2C_XGZP
+#if !(defined(USE_I2C_XGZP) || defined(USE_I2C_DS3502))
 	{ GPIOB, GPIO_PIN_8  }, // D13 or I2C1_SCL
 	{ GPIOB, GPIO_PIN_9  }, // D14 or I2C1_SDA
 #endif
@@ -157,6 +158,9 @@ void updateRGBLEDs() {
 
 void doMainLoopTasks() {
 
+	bool didSomethingOnI2C = false;
+	UNUSED(didSomethingOnI2C); // avoid warning if XGZP is not used
+
 	// servoThreadCount is a value that will change every 1ms in the servo thread. Make
 	// use of that to read digital inputs at a rate that is no faster than necessary.
 
@@ -194,10 +198,17 @@ void doMainLoopTasks() {
 				turnOffAllRGBLEDs();
 			doRGBLEDOutput(); // DMA, takes a little time. I2C1 must not be enabled during this phase.
 		}
-		else if ( counter50Hz == 10 ) {
+		else if ( counter50Hz == 5 ) {
 			int pwmCompare = haveComms ? ((rxData.spindleSpeed / 65535.0f) * 3600) : 0;
 			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, pwmCompare);
 		}
+#ifdef USE_I2C_DS3502
+		else if ( counter50Hz == 10 ) {
+			float val = haveComms ? (rxData.spindleSpeed / 65535.0f) : 0;
+			updateDS3502(val);
+			didSomethingOnI2C = true;
+		}
+#endif
 
 		lastSlowUpdatesTime = servoThreadCount;
 	}
@@ -207,9 +218,11 @@ void doMainLoopTasks() {
 #ifdef USE_I2C_XGZP
 	static int pressureUpdateCounter = 0;
 
-	if ( pressureUpdateCounter++ > 10 ) {
-		updateXGZP();
-		pressureUpdateCounter = 0;
+	if ( ! didSomethingOnI2C ) { // skip this time if I2C is already active
+		if ( pressureUpdateCounter++ > 10 ) {
+			updateXGZP();
+			pressureUpdateCounter = 0;
+		}
 	}
 #endif
 

@@ -8,7 +8,9 @@ The firmware for the realtime unit targets STM32F103C8 aka 'Blue Pill'. Source c
 
 Unlike Remora, this firmware is not conveniently configurable by SD card, so all modifications will need to be changed in the source code.
 
-Tested on Raspberry Pi 3B, 3B+, 4B and ZeroW with 4.19.71 PREEMPT, LinuxCNC 2.8.4
+Tested on Raspberry Pi 3B, 3B+, 4B and ZeroW with 4.19.71 PREEMPT_RT, LinuxCNC 2.8.4
+
+Tested on Raspberry 4B with 6.6.44 PREEMPT_RT, LinuxCNC 2.9.3 (see setupStepsPi4.txt)
 
 <br>
 
@@ -74,9 +76,26 @@ This was tested with these drivers, which worked out of the box without needing 
 
 <br>
 
+## About PWM output for spindle
+
+The 'weeny.spindle.set-speed' pin can be assigned a value between 0-65535 to control a 10kHz duty cycle pulse on the PWM pin, where 65535 means the pulse will be fully on. Unfortunately it's only a 3.3V signal though, so it has limited usefulness for controlling a VFD where commonly a voltage of 0-10V represents the full speed range. You would also want some smoothing of the pulse (eg. a capacitor at least) which will lower the pulse voltage even further. Some VFDs allow for re-assigning the end points, so perhaps a lower max voltage might be still be feasible, but see below about using a digital potentiometer for this purpose.
+
+<br>
+
+## About I2C digital potentiometer (DS3502)
+
+On a v1.2 board, you can control a [DS3502](https://www.adafruit.com/product/4286) I2C digital potentiometer, which can be used to control the spindle speed on some VFDs. To do this, bridge ***both*** the 'I2C' jumpers, which will connect pullups to pins D13 and D14. This also requires that DS3502 usage is enabled in the firmware (in config.h). The output value of the potentiometer will be the same as for the PWM output (but with only 128 actual steps of resolution).
+
+You can then connect the DS3502 sensor with:
+
+ - D13 --> SCL
+ - D14 --> SDA
+
+<br>
+
 ## About I2C pressure sensor
 
-On a v1.2 board, you can read values from a XGZP I2C pressure sensor. To do this, bridge ***both*** the 'I2C' jumpers, which will connect pullups to pins D13 and D14. This also requires that XGZP usage is enabled in the firmware (which is the default for the pre-built 'v1.2' binary).
+On a v1.2 board, you can read values from a XGZP I2C pressure sensor. To do this, bridge ***both*** the 'I2C' jumpers, which will connect pullups to pins D13 and D14. This also requires that XGZP usage is enabled in the firmware (in config.h).
 
 You can then connect your XGZP sensor with:
 
