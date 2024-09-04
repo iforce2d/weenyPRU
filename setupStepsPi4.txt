@@ -24,4 +24,7 @@ To use external RTL8192EU WiFi dongle:
 
 To disable the onboard WiFi, in the Edit Connection dialog of the menu-config tool, at the bottom uncheck 'Automatically connect' by pressing space bar.
 
-
+To use VNC for the main session:
+    sudo apt install x11vnc
+    x11vnc -repeat
+    
