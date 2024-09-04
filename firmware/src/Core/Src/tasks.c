@@ -30,10 +30,10 @@ TMC_UART tmc_3;
 #define TMC_DEFAULT_CURRENT		200		// 0 - 2000
 
 void setupTasks() {
-	initStepgen(&sg_0, 3, GPIOA, GPIO_PIN_4, TIM_CHANNEL_1); // A: dir on PA4, step on PA0
-	initStepgen(&sg_1, 1, GPIOA, GPIO_PIN_5, TIM_CHANNEL_2); // Z: dir on PA5, step on PA1
-	initStepgen(&sg_2, 2, GPIOA, GPIO_PIN_6, TIM_CHANNEL_3); // Y: dir on PA6, step on PA2
-	initStepgen(&sg_3, 0, GPIOB, GPIO_PIN_5, TIM_CHANNEL_4); // X: dir on PA7, step on PA3
+	initStepgen(&sg_0, 0, GPIOA, GPIO_PIN_4, TIM_CHANNEL_1); // X: dir on PA4, step on PA0
+	initStepgen(&sg_1, 1, GPIOA, GPIO_PIN_5, TIM_CHANNEL_2); // Y: dir on PA5, step on PA1
+	initStepgen(&sg_2, 2, GPIOA, GPIO_PIN_6, TIM_CHANNEL_3); // Z: dir on PA6, step on PA2
+	initStepgen(&sg_3, 3, GPIOB, GPIO_PIN_5, TIM_CHANNEL_4); // A: dir on PB5, step on PA3
 
 #ifdef USE_UART_TMC
 	HAL_Delay(15); // TMCs take a while to wake up?
