@@ -5,7 +5,6 @@
 
 #include "main.h"
 #include "i2c.h"
-#include "XGZP.h"
 #include "comms.h"
 
 #define DS3502_I2C_BUS	hi2c1

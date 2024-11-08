@@ -79,7 +79,7 @@ void updateXGZP() {
 		v = 0;
 	else if ( v > 65535)
 		v = 65535;
-	txData.vacuum = (uint16_t)v;
+	txData.pressure = (uint16_t)v;
 }
 
 //void updateXGZP_() {

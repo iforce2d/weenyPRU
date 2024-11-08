@@ -23,7 +23,6 @@ void commsStart() {
 	incomingSPIBuffer.header = 0;
 
 	memset((uint8_t*)&txData, 0, sizeof(txData_t));
-	//txData.vacuum = (0 * 500) + 50000;
 
     txData.header = PRU_DATA;
     HAL_SPI_TransmitReceive_DMA(&hspi2, (uint8_t*)&txData, (uint8_t*)&incomingSPIBuffer, sizeof(commPacket_t));

@@ -26,6 +26,7 @@ Tested on Raspberry 4B with 6.6.44 PREEMPT_RT, LinuxCNC 2.9.3 (see setupStepsPi4
 - TMC2209 stepper driver control from HAL (microstep and current)
 - XGZP (I2C) pressure sensor reading
 - DS3502 (I2C) digital potentiometer control
+- HX711 load cell amplifier input (mutually exclusive with RGB LEDs)
 
 
 <br>
@@ -51,6 +52,8 @@ Pin PC13 is used to indicate that SPI connection to Raspberry Pi is established.
 ## About RGB LEDs
 
 The WS2812 protocol is used to control up to 16 addressable RGB LEDs on PB5. Although these are not officially supposed to work with 3.3V signals, in my experience many variants do actually work just fine. You can control the individual red/green/blue components of each LED (simply on or off, no gradual dimming) via HAL pins. Note that when SPI connection is lost, all RGB LEDs will also turn off.
+
+RGB LEDs cannot be used simultaneously with HX711 load cell input due to both needing to use SPI1.
 
 <br>
 
@@ -107,6 +110,21 @@ The pressure value will appear as the HAL pin 'weeny.pressure.0' in units of kPa
 
 <br>
 
+## About HX711 load cell amplifier
+
+On a v1.2 board, an HX711 load cell amplifier can be enabled in the firmware (in config.h). Note that enabling load cell input will disable RGB LED output!
+
+You can then connect to the HX711 with:
+
+ - D9 --> CLK
+ - D10 --> DT
+
+The load reading will appear as the HAL pin 'weeny.loadcell.0'.
+
+If you are using one of the widely available cheapo HX711 breakout board, or best results power it with 5V (D10 is 5V tolerant) and connect E- to ground.
+
+<br>
+
 ## LinuxCNC component
 
 To install the LinuxCNC component, invoke halcompile from the components/weeny folder like this:
@@ -125,6 +143,7 @@ These pins are created by the component:
 - weeny.tmc.N.microsteps
 - weeny.tmc.N.current
 - weeny.pressure.0
+- weeny.loadcell.0
 
 See [components](components/README.md) for more info.
 

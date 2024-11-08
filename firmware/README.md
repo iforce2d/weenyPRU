@@ -6,23 +6,44 @@ The project was created with STM32CubeIDE so it should be importable with that I
 
 Note that a debug build will not be fast enough for high step rates, and will probably cause the SPI connection with the RPi to drop out frequently.
 
+
+## Feature selection
+
+In config.h you can select which features you need. Disabling features you're not using will (slightly) improve timing accuracy. 
+
+Some features when disabled will free up their related pin for use as a regular digital I/O, the silkscreen labe for these are listed alongside the feature here:
+
+- USE_RGBLED (disable to use RGB as digital I/O)
+- USE_ROTARY_ENCODER (disable to use CLK, DT as digital I/O)
+- USE_ANALOG (disable to use ADC1, ADC2 as digital I/O)
+- USE_UART_TMC
+- USE_I2C_XGZP
+- USE_I2C_DS3502
+- USE_LOADCELL
+
+Note that USE_LOADCELL will disable USE_RGBLED
+
 ## Hardware pins
 
-You can allocate the digital I/O pins between input and output by editing the 'digitalIns' and 'digitalOuts' arrays in tasks.c, see the comments there for details.
+You can allocate the digital I/O pins between input and output by editing the 'digitalIns' and 'digitalOuts' arrays in tasks.c. The LinuxCNC HAL pin that each digital I/O pin relates to will depend on the order pins are listed in those arrays. See the comments there for details.
 
-In v1.2 support was added for UART control of TMC2209 stepper drivers, and a XGZP pressure sensor over I2C. In v1.3 support was added for a DS3502 digital potentiometer over I2C.
+In v1.2 support was added for UART control of TMC2209 stepper drivers, and a XGZP pressure sensor over I2C. In v1.3 support was added for a DS3502 digital potentiometer over I2C. In v1.4 support was added for a HX711 load cell amplifier, and timing accuracy was improved.
 
 To use UART control of the onboard TMC drivers:
 - define USE_UART_TMC in config.h
-- close the 'UART' jumper to connect D12 to the UART pins of the drivers
+- close the 'UART' jumper to connect D12 to the UART pins of the TMC drivers
 
 To enable XGZP pressure sensor:
 - define USE_I2C_XGZP in config.h
-- close ***both*** 'I2C' jumpers to connect D13 and D14 to pullup resistors
+- close ***both*** 'I2C' jumpers to connect D13 (SCL) and D14 (SDA) to pullup resistors
 
 To enable DS3502 digital potentiometer:
 - define USE_I2C_DS3502 in config.h
-- close ***both*** 'I2C' jumpers to connect D13 and D14 to pullup resistors
+- close ***both*** 'I2C' jumpers to connect D13 (SCL) and D14 (SDA) to pullup resistors
+
+To enable HX711 load cell:
+- define USE_LOADCELL in config.h
+- connect D9 (CLK) and D10 (DT) to the HX711
 
 When these are enabled, naturally the related pins can no longer be used for regular digital I/O.
 
@@ -33,16 +54,17 @@ See the [main page](../README.md) for further info on TMC2209 setup.
 
 The 'legacy' pre-built binary was made before TMC2209 UART support was added, and will only function correctly on a pre-v1.2 board. It shares the 14 digital I/O equally between input and output. That is, pins D1-D7 are inputs, and D8-D14 are outputs.
 
-The 'v1.2' pre-built binary enables UART TMC and I2C XGZP. 
+The 'v1.2' pre-built binary enables UART TMC and XGZP. 
 
-The 'v1.3' pre-built binary enables UART TMC and I2C DS3502.
+The 'v1.3' pre-built binary enables UART TMC, XGZP, and DS3502.
 
-(These version numbers are for the firmware, not the board hardware.)
+The 'v1.4' pre-built binary enables UART TMC, XGZP, DS3502 and HX711 (instead of RGB LEDs).
 
+(These version numbers are for the *firmware*, not the board hardware.)
 
 ## Pin mappings
 
-### SPI
+### SPI2 connection to RPi
 <table>
 <tr><td>PB15</td><td>MOSI</td></tr>
 <tr><td>PB14</td><td>MISO</td></tr>
@@ -52,7 +74,7 @@ The 'v1.3' pre-built binary enables UART TMC and I2C DS3502.
 
 ### Status LED
 <table>
-<tr><td>PC13</td><td>Connection LED (lights when pulled low)</td></tr>
+<tr><td>PC13</td><td>Connection active LED (lights when low)</td></tr>
 </table>
 
 ### Step, direction outputs
@@ -69,10 +91,10 @@ The 'v1.3' pre-built binary enables UART TMC and I2C DS3502.
 
 ### Digital inputs
 <table>
-<tr><td>PB2</td><td>D1 (pulled up)</td></tr>
-<tr><td>PB10</td><td>D2 (pulled up)</td></tr>
-<tr><td>PB11</td><td>D3 (pulled up)</td></tr>
-<tr><td>PA11</td><td>D4 (pulled up)</td></tr>
+<tr><td>PB2</td><td>D1 (pulled up by resistor on PCB)</td></tr>
+<tr><td>PB10</td><td>D2 (pulled up by resistor on PCB)</td></tr>
+<tr><td>PB11</td><td>D3 (pulled up by resistor on PCB)</td></tr>
+<tr><td>PA11</td><td>D4 (pulled up by resistor on PCB)</td></tr>
 <tr><td>PA9</td><td>D5 </td></tr>
 <tr><td>PA10</td><td>D6 </td></tr>
 <tr><td>PA12</td><td>D7 </td></tr>
@@ -81,10 +103,10 @@ The 'v1.3' pre-built binary enables UART TMC and I2C DS3502.
 ### Digital outputs
 <table>
 <tr><td>PA15</td><td>D8</td></tr>
-<tr><td>PB3</td><td>D9 </td></tr>
-<tr><td>PB4</td><td>D10 </td></tr>
+<tr><td>PB3</td><td>D9 or HX711 CLK</td></tr>
+<tr><td>PB4</td><td>D10 or HX711 DT </td></tr>
 <tr><td>PB7</td><td>D11 </td></tr>
-<tr><td>PB6</td><td>D12 or TMC stepper control</td></tr>
+<tr><td>PB6</td><td>D12 or TMC stepper UART control</td></tr>
 <tr><td>PB8</td><td>D13 or I2C SCL</td></tr>
 <tr><td>PB9</td><td>D14 or I2C SDA</td></tr>
 </table>

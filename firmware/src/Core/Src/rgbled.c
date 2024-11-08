@@ -1,7 +1,9 @@
 
 #include "main.h"
 #include "rgbled.h"
-#include "spi1.h"
+#include "spi1_rgbled.h"
+#include "config.h"
+#include "comms.h"
 
 #define NUM_RGBLEDS 16
 
@@ -121,8 +123,33 @@ void setRGBLedColor(uint16_t n, uint8_t r, uint8_t g, uint8_t b) {
 	*bptr++ = *tPtr++;
 }
 
+void updateRGBLEDs() {
+
+	uint8_t brightness = 100;
+	uint8_t rgb[3];
+
+    for (int i = 0; i < 48; i++)
+    {
+        int bytePos = i / 8;
+        int bitPos = i % 8;
+    	int ledPos = i / 3;
+    	int colorPos = i % 3;
+
+    	if ( rxData.rgb[bytePos] & (1 << bitPos))
+        	rgb[colorPos] = brightness;
+        else
+        	rgb[colorPos] = 0;
+
+        if ( colorPos == 2 )
+        	setRGBLedColor(ledPos, rgb[0], rgb[1], rgb[2]);
+    }
+}
+
+extern SPI_HandleTypeDef hspi1;
+
 void doRGBLEDOutput() {
 
 	HAL_SPI_Transmit_DMA( &hspi1, rgbBytes, NUM_RGBLEDS * 9 + 2 );
 
 }
+

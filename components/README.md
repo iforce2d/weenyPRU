@@ -50,7 +50,8 @@ Sets the (approximate) RMS current in milliamps for a TMC2209 stepper driver at 
 
 Returns the pressure sensor reading in kPa.
 
+### weeny.loadcell.0
 
-
+Returns the load cell reading as a raw signed 24 bit value (range −8,388,608 to 8,388,607).
 
 <br>

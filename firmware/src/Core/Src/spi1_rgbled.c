@@ -1,9 +1,11 @@
+
 #include "main.h"
-#include "rgbled.h"
+#include "config.h"
+
+#ifndef USE_LOADCELL
 
 SPI_HandleTypeDef hspi1;
 DMA_HandleTypeDef hdma_spi1_tx;
-
 
 void HAL_SPI_MspInit_rgbled(SPI_HandleTypeDef* hspi) {
 
@@ -97,6 +99,4 @@ void DMA1_Channel3_IRQHandler(void) {
 	HAL_DMA_IRQHandler(&hdma_spi1_tx);
 }
 
-
-
-
+#endif // ndef USE_LOADCELL
