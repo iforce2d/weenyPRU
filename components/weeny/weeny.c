@@ -73,18 +73,19 @@ typedef struct {
 	float 			old_scale[JOINTS];			// stored scale value
         //float 			scale_recip[JOINTS];		// reciprocal value used for scaling
 	float			prev_cmd[JOINTS];
-        //float			cmd_d[JOINTS];					// command derivative
-        //hal_float_t 	*setPoint[VARIABLES];
-        //hal_float_t 	*processVariable[VARIABLES];
-        hal_s32_t       *jogcounts[3];          // analog0, analog1, rotary encoder
-        hal_bit_t   	*outputs[DIGITAL_OUTPUTS];
-        hal_bit_t   	*inputs[DIGITAL_INPUTS];
-        hal_bit_t   	*rgb[RGB_BITS];
-        hal_float_t 	*spindleSpeed[1];
-        hal_float_t 	*adc[2]; // raw ADC values
-        hal_s32_t       *microsteps[JOINTS];
-        hal_s32_t       *rmsCurrent[JOINTS]; // use signed so that HAL configuration dialog shows eg. 200 instead of 0x000000c8
-        hal_float_t     *pressure;
+    //float			cmd_d[JOINTS];					// command derivative
+    //hal_float_t 	*setPoint[VARIABLES];
+    //hal_float_t 	*processVariable[VARIABLES];
+    hal_s32_t       *jogcounts[3];          // analog0, analog1, rotary encoder
+    hal_bit_t   	*outputs[DIGITAL_OUTPUTS];
+    hal_bit_t   	*inputs[DIGITAL_INPUTS];
+    hal_bit_t   	*rgb[RGB_BITS];
+    hal_float_t 	*spindleSpeed[1];
+    hal_float_t 	*adc[2]; // raw ADC values
+    hal_s32_t       *microsteps[JOINTS];
+    hal_s32_t       *rmsCurrent[JOINTS]; // use signed so that HAL configuration dialog shows eg. 200 instead of 0x000000c8
+    hal_float_t     *pressure;
+    hal_s32_t       *loadcell;
 } data_t;
 
 static data_t *data;
@@ -103,7 +104,7 @@ typedef struct __attribute__((__packed__))
         uint8_t microsteps[JOINTS];     // 4 bytes
         uint8_t rmsCurrent[JOINTS];     // 4 bytes
 
-        uint8_t dummy[5];               // make up to same size as rxData_t
+        uint8_t dummy[9];               // make up to same size as rxData_t
 } txData_t;
 
 typedef struct __attribute__((__packed__))
@@ -114,8 +115,9 @@ typedef struct __attribute__((__packed__))
         int32_t jointFeedback[JOINTS];  // 16 bytes
         int32_t jogcounts[4];           // 16 bytes
         uint16_t inputs;                // 2 bytes
-        uint16_t adc[2];		// 4 bytes
-        uint16_t pressure;		// 2 bytes
+        uint16_t adc[2];                // 4 bytes
+        uint16_t pressure;              // 2 bytes
+        int32_t loadcell;              // 4 bytes
 
 } rxData_t;
 
@@ -371,6 +373,10 @@ This is throwing errors from axis.py for some reason...
         retval = hal_pin_float_newf(HAL_OUT, &(data->pressure), comp_id, "%s.pressure.%01d", prefix, 0);
         if (retval < 0) goto error;
         *(data->pressure) = 200;
+
+        retval = hal_pin_s32_newf(HAL_OUT, &(data->loadcell), comp_id, "%s.loadcell.%01d", prefix, 0);
+        if (retval < 0) goto error;
+        *(data->loadcell) = 0;
 
 //	for (n = 0; n < VARIABLES; n++) {
 //	// export pins
@@ -920,6 +926,9 @@ void spi_read()
 //                                            rtapi_print("pressure = %d (%f)\n", rxData.pressure, vac);
 //                                            lastVac = vac;
 //                                        }
+
+                                        *(data->loadcell) = rxData.loadcell;
+                                        //rtapi_print("loadcell = %ld\n", rxData.loadcell);
 
 					break;
 					
