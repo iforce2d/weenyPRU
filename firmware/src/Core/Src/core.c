@@ -34,22 +34,23 @@ void doSetup() {
 	CONNECTED_LED_OFF;
 
 	HAL_NVIC_SetPriority(TIM4_IRQn, 0, 0); // base thread
-	HAL_NVIC_SetPriority(DMA1_Channel4_IRQn, 0, 0); // comms rx
-	HAL_NVIC_SetPriority(DMA1_Channel5_IRQn, 0, 0); // comms tx
 
-	HAL_NVIC_SetPriority(TIM3_IRQn, 1, 0); // servo thread
+	HAL_NVIC_SetPriority(DMA1_Channel4_IRQn, 1, 0); // comms rx
+	HAL_NVIC_SetPriority(DMA1_Channel5_IRQn, 1, 0); // comms tx
+
+	HAL_NVIC_SetPriority(TIM3_IRQn, 2, 0); // servo thread
 
 #ifdef USE_LOADCELL
-	HAL_NVIC_SetPriority(DMA1_Channel2_IRQn, 1, 0); // spi1 RX
-	HAL_NVIC_SetPriority(DMA1_Channel3_IRQn, 1, 0); // spi1 TX
+	HAL_NVIC_SetPriority(DMA1_Channel2_IRQn, 3, 0); // spi1 RX
+	HAL_NVIC_SetPriority(DMA1_Channel3_IRQn, 3, 0); // spi1 TX
 #endif
 
 #ifdef USE_RGBLED
-	HAL_NVIC_SetPriority(DMA1_Channel3_IRQn, 2, 0); // RGB LEDs
+	HAL_NVIC_SetPriority(DMA1_Channel3_IRQn, 3, 0); // RGB LEDs
 #endif
 
 #ifdef USE_ROTARY_ENCODER
-	HAL_NVIC_SetPriority(EXTI15_10_IRQn, 2, 0); // rotary encoder
+	HAL_NVIC_SetPriority(EXTI15_10_IRQn, 3, 0); // rotary encoder
 #endif
 
 #ifdef USE_I2C_DS3502

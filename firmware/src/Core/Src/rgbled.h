@@ -3,7 +3,7 @@
 
 #include "config.h"
 
-#ifndef USE_LOADCELL
+#ifdef USE_RGBLED
 
 void initRGBLED();
 void turnOffAllRGBLEDs();
@@ -11,6 +11,6 @@ void setRGBLedColor(uint16_t n, uint8_t r, uint8_t g, uint8_t b);
 void updateRGBLEDs();
 void doRGBLEDOutput();
 
-#endif
+#endif // USE_RGBLED
 
-#endif /* SRC_RGBLED_H_ */
+#endif // SRC_RGBLED_H_

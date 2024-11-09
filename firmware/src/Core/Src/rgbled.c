@@ -5,6 +5,8 @@
 #include "config.h"
 #include "comms.h"
 
+#ifdef USE_RGBLED
+
 #define NUM_RGBLEDS 16
 
 uint8_t rgbBytes[ NUM_RGBLEDS * 9 + 2 ];
@@ -153,3 +155,4 @@ void doRGBLEDOutput() {
 
 }
 
+#endif
