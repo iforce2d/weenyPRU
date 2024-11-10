@@ -659,14 +659,36 @@ static void MX_DMA_Init(void)
   */
 static void MX_GPIO_Init(void)
 {
-
-  /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
-  // GPIO will be set up in setupGPIOPins()
+  // The pins below will always be GPIO.
+  // Other GPIO that depend on enabled features are set up in setupGPIOPins()
+
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+  // PC13 is the onboard LED to show active SPI connection to RPi
+  GPIO_InitStruct.Pin = Onboard_LED_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(Onboard_LED_GPIO_Port, &GPIO_InitStruct);
+
+  // PA4 PA5 PA6 are stepper direction pins
+  GPIO_InitStruct.Pin = GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  // PB5 is stepper direction pin
+  GPIO_InitStruct.Pin = GPIO_PIN_5;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*
   GPIO_InitTypeDef GPIO_InitStruct = {0};
