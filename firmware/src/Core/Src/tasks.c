@@ -76,9 +76,8 @@ PortAndPin digitalIns[] = {
 	{ GPIOA, GPIO_PIN_9,  GPIO_NOPULL }, // D5
 	{ GPIOA, GPIO_PIN_10, GPIO_NOPULL }, // D6
 	{ GPIOA, GPIO_PIN_12, GPIO_NOPULL }, // D7
-#ifndef USE_ANALOG
-	{ GPIOB, GPIO_PIN_0,  GPIO_NOPULL }, // ADC1
-	{ GPIOB, GPIO_PIN_1,  GPIO_NOPULL }, // ADC2
+#ifndef USE_PWM
+	{ GPIOA, GPIO_PIN_8,  GPIO_NOPULL }, // PWM
 #endif
 };
 
@@ -103,6 +102,10 @@ PortAndPin digitalOuts[] = {
 #ifndef USE_ROTARY_ENCODER
 	{ GPIOC, GPIO_PIN_14  }, // DT
 	{ GPIOC, GPIO_PIN_15  }, // CLK
+#endif
+#ifndef USE_ANALOG
+	{ GPIOB, GPIO_PIN_0,  GPIO_NOPULL }, // ADC1
+	{ GPIOB, GPIO_PIN_1,  GPIO_NOPULL }, // ADC2
 #endif
 };
 
@@ -218,11 +221,13 @@ void doMainLoopTasks() {
 		msSince_digitalInputRead = 0;
 	}
 
+#ifdef USE_PWM
 	if ( msSince_pwmUpdate > 40 ) {
 		int pwmCompare = haveComms ? ((rxData.spindleSpeed / 65535.0f) * 3600) : 0;
 		__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, pwmCompare);
 		msSince_pwmUpdate = 0;
 	}
+#endif
 
 #ifdef USE_I2C_DS3502
 	if ( msSince_DS3502Update > 30 ) {
@@ -249,7 +254,7 @@ void doMainLoopTasks() {
 
 #ifdef USE_I2C_XGZP
 	// Update pressure sensor at about 100Hz
-	if ( msSince_XGZPUpdate > 10 ) {
+	if ( msSince_XGZPUpdate > 3 ) {
 		if ( ! didSomethingOnI2C ) { // skip this time if I2C is already active
 			updateXGZP();
 			didSomethingOnI2C = true;

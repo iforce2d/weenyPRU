@@ -71,11 +71,19 @@ static void MX_SPI2_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_TIM4_Init(void);
 static void MX_TIM2_Init(void);
+#ifdef USE_ANALOG
 static void MX_ADC1_Init(void);
 static void MX_ADC2_Init(void);
+#endif
+#ifdef USE_PWM
 static void MX_TIM1_Init(void);
+#endif
+#ifdef USE_UART_TMC
 static void MX_USART1_UART_Init(void);
+#endif
+#if (defined(USE_I2C_XGZP) || defined(USE_I2C_DS3502))
 static void MX_I2C1_Init(void);
+#endif
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -118,11 +126,19 @@ int main(void)
   MX_TIM3_Init();
   MX_TIM4_Init();
   MX_TIM2_Init();
+#ifdef USE_ANALOG
   MX_ADC1_Init();
   MX_ADC2_Init();
+#endif
+#ifdef USE_PWM
   MX_TIM1_Init();
+#endif
+#ifdef USE_UART_TMC
   MX_USART1_UART_Init();
+#endif
+#if (defined(USE_I2C_XGZP) || defined(USE_I2C_DS3502))
   MX_I2C1_Init();
+#endif
   /* USER CODE BEGIN 2 */
 
   doSetup();
@@ -193,6 +209,7 @@ void SystemClock_Config(void)
   * @param None
   * @retval None
   */
+#ifdef USE_ANALOG
 static void MX_ADC1_Init(void)
 {
 
@@ -234,12 +251,14 @@ static void MX_ADC1_Init(void)
   /* USER CODE END ADC1_Init 2 */
 
 }
+#endif
 
 /**
   * @brief ADC2 Initialization Function
   * @param None
   * @retval None
   */
+#ifdef USE_ANALOG
 static void MX_ADC2_Init(void)
 {
 
@@ -281,12 +300,14 @@ static void MX_ADC2_Init(void)
   /* USER CODE END ADC2_Init 2 */
 
 }
+#endif
 
 /**
   * @brief I2C1 Initialization Function
   * @param None
   * @retval None
   */
+#if (defined(USE_I2C_XGZP) || defined(USE_I2C_DS3502))
 static void MX_I2C1_Init(void)
 {
 
@@ -317,6 +338,7 @@ static void MX_I2C1_Init(void)
   /* USER CODE END I2C1_Init 2 */
 
 }
+#endif
 
 /**
   * @brief SPI2 Initialization Function
@@ -362,20 +384,13 @@ void MX_SPI2_Init(void)
   * @param None
   * @retval None
   */
+#ifdef USE_PWM
 static void MX_TIM1_Init(void)
 {
-
-  /* USER CODE BEGIN TIM1_Init 0 */
-
-  /* USER CODE END TIM1_Init 0 */
-
   TIM_MasterConfigTypeDef sMasterConfig = {0};
   TIM_OC_InitTypeDef sConfigOC = {0};
   TIM_BreakDeadTimeConfigTypeDef sBreakDeadTimeConfig = {0};
 
-  /* USER CODE BEGIN TIM1_Init 1 */
-
-  /* USER CODE END TIM1_Init 1 */
   htim1.Instance = TIM1;
   htim1.Init.Prescaler = 1;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
@@ -415,12 +430,10 @@ static void MX_TIM1_Init(void)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN TIM1_Init 2 */
 
-  /* USER CODE END TIM1_Init 2 */
   HAL_TIM_MspPostInit(&htim1);
-
 }
+#endif
 
 /**
   * @brief TIM2 Initialization Function
@@ -588,6 +601,7 @@ static void MX_TIM4_Init(void)
   * @param None
   * @retval None
   */
+#ifdef USE_UART_TMC
 static void MX_USART1_UART_Init(void)
 {
 
@@ -617,6 +631,7 @@ static void MX_USART1_UART_Init(void)
   /* USER CODE END USART1_Init 2 */
 
 }
+#endif
 
 /**
   * Enable DMA controller clock
@@ -644,9 +659,6 @@ static void MX_DMA_Init(void)
   */
 static void MX_GPIO_Init(void)
 {
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
-/* USER CODE BEGIN MX_GPIO_Init_1 */
-/* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();
@@ -654,50 +666,52 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
-  /*Configure GPIO pin Output Level */
+  // GPIO will be set up in setupGPIOPins()
+
+  /*
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  //Configure GPIO pin Output Level
   HAL_GPIO_WritePin(Onboard_LED_GPIO_Port, Onboard_LED_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin Output Level */
+  //Configure GPIO pin Output Level
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_15, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin Output Level */
+  //Configure GPIO pin Output Level
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_7, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : Onboard_LED_Pin */
+  //Configure GPIO pin : Onboard_LED_Pin
   GPIO_InitStruct.Pin = Onboard_LED_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(Onboard_LED_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PA4 PA5 PA6 PA15 */
+  //Configure GPIO pins : PA4 PA5 PA6 PA15
   GPIO_InitStruct.Pin = GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_15;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PB2 PB10 PB11 */
+  //Configure GPIO pins : PB2 PB10 PB11
   GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_10|GPIO_PIN_11;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PA9 PA10 PA11 PA12 */
+  //Configure GPIO pins : PA9 PA10 PA11 PA12
   GPIO_InitStruct.Pin = GPIO_PIN_9|GPIO_PIN_10|GPIO_PIN_11|GPIO_PIN_12;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PB3 PB4 PB5 PB7 */
+  //Configure GPIO pins : PB3 PB4 PB5 PB7
   GPIO_InitStruct.Pin = GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_7;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-/* USER CODE BEGIN MX_GPIO_Init_2 */
-/* USER CODE END MX_GPIO_Init_2 */
+  */
 }
 
 /* USER CODE BEGIN 4 */

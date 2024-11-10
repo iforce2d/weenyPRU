@@ -121,7 +121,7 @@ You can then connect to the HX711 with:
 
 The load reading will appear as the HAL pin 'weeny.loadcell.0'.
 
-If you are using one of the widely available cheapo HX711 breakout board, or best results power it with 5V (D10 is 5V tolerant) and connect E- to ground.
+If you are using one of the widely available cheapo HX711 breakout boards, for best results power it with 5V (D10 is 5V tolerant) and connect E- to ground.
 
 <br>
 
