@@ -141,6 +141,10 @@ void set_pdn_disable_and_mstep_reg_select(TMC_UART* u)	{
 
 void set_microstep_code( TMC_UART* u, uint8_t  v )	{
 
+/* This code was to only write a few times after a value was actually changed
+ * to avoid unnecessary messages, but I think the TMC drivers can handle being
+ * updated at the 1Hz rate without any problems, so let's make it continuous.
+ * This also helps to avoid missing messages, or not starting up correctly.
 	if ( v != u->lastWrittenMicrostepsCode )
 		u->microstepWriteRepeatsRemaining = WRITE_REPEATS;
 
@@ -149,7 +153,7 @@ void set_microstep_code( TMC_UART* u, uint8_t  v )	{
 
 	u->microstepWriteRepeatsRemaining--;
 	u->lastWrittenMicrostepsCode = v;
-
+*/
 	if ( v > 8 )
 		return;
 
@@ -190,6 +194,10 @@ void set_irun_and_ihold( TMC_UART* u, uint8_t  R, uint8_t  H )	{
 
 void set_rms_current(TMC_UART* u, uint16_t mA) {
 
+/* This code was to only write a few times after a value was actually changed
+ * to avoid unnecessary messages, but I think the TMC drivers can handle being
+ * updated at the 1Hz rate without any problems, so let's make it continuous.
+ * This also helps to avoid missing messages, or not starting up correctly.
 	if ( mA != u->lastWrittenCurrent )
 		u->currentWriteRepeatsRemaining = WRITE_REPEATS;
 
@@ -197,7 +205,8 @@ void set_rms_current(TMC_UART* u, uint16_t mA) {
 		return;
 
 	u->currentWriteRepeatsRemaining--;
-
+	u->lastWrittenCurrent = mA;
+*/
 	float Rsense = 0.11f;
 	float holdMultiplier = 0.5;
 
@@ -215,7 +224,6 @@ void set_rms_current(TMC_UART* u, uint16_t mA) {
 		CS = 31;
 
 	set_irun_and_ihold(u, CS, CS*holdMultiplier);
-	u->lastWrittenCurrent = mA;
 }
 
 void initTMCUART(TMC_UART* u, uint8_t address, uint8_t microsteps, uint16_t mA)
@@ -223,8 +231,8 @@ void initTMCUART(TMC_UART* u, uint8_t address, uint8_t microsteps, uint16_t mA)
 	u->address = address;
 	u->gconf = 0;
 	u->chopconf = 0;
-	u->microstepWriteRepeatsRemaining = WRITE_REPEATS;
-	u->currentWriteRepeatsRemaining = WRITE_REPEATS;
+	//u->microstepWriteRepeatsRemaining = WRITE_REPEATS;
+	//u->currentWriteRepeatsRemaining = WRITE_REPEATS;
 
 	set_pdn_disable_and_mstep_reg_select(u);
 	set_microsteps(u, microsteps);

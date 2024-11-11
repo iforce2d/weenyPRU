@@ -9,11 +9,11 @@ typedef struct TMC_UART {
 	uint32_t gconf;
 	uint32_t chopconf;
 
-	uint8_t  lastWrittenMicrostepsCode;	// the register value (eg. 5 for 8x microstepping)
-	uint16_t lastWrittenCurrent;			// 0-2000 (actual current)
+	//uint8_t  lastWrittenMicrostepsCode;	// the register value (eg. 5 for 8x microstepping)
+	//uint16_t lastWrittenCurrent;			// 0-2000 (actual current)
 
-	uint8_t microstepWriteRepeatsRemaining;
-	uint8_t currentWriteRepeatsRemaining;
+	//uint8_t microstepWriteRepeatsRemaining;
+	//uint8_t currentWriteRepeatsRemaining;
 
 } TMC_UART;
 
