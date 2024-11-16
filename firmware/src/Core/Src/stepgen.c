@@ -19,16 +19,12 @@ void initStepgen(
 		uint16_t dirPin,
 		uint32_t stepTimerChannel)
 {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Waddress-of-packed-member"
 	sg->jointNumber = jointNumber;
 	sg->dirPort = dirPort;
 	sg->dirPin = dirPin;
 	sg->stepTimerChannel = stepTimerChannel;
-	sg->ptrFrequencyCommand = &rxData.jointFreqCmd[jointNumber];
-	sg->ptrFeedback = &txData.jointFeedback[jointNumber];
 	sg->DDSaccumulator = 0;
-#pragma GCC diagnostic pop
+	sg->rawCount = 0;
 }
 
 void prepStep(Stepgen* sg)
@@ -37,7 +33,7 @@ void prepStep(Stepgen* sg)
 
 	if ( rxData.jointEnable & (1 << sg->jointNumber) ) {
 
-		int32_t frequencyCommand = *(sg->ptrFrequencyCommand);      // Get the latest frequency command via pointer to the data source
+		int32_t frequencyCommand = rxData.jointFreqCmd[sg->jointNumber];// Get the latest frequency command via pointer to the data source
 		int32_t	DDSaddValue = frequencyCommand * frequencyScale;	// Scale the frequency command to get the DDS add value
 		int32_t stepNow = sg->DDSaccumulator;                       // Save the current DDS accumulator value
 		sg->DDSaccumulator += DDSaddValue;           	  			// Update the DDS accumulator with the new add value
@@ -49,7 +45,11 @@ void prepStep(Stepgen* sg)
 
 		if (stepNow) {
 			__HAL_TIM_SET_COMPARE(&htim2, sg->stepTimerChannel, 4); // 4 microsecond pulse width
-			*(sg->ptrFeedback) = sg->DDSaccumulator;                // Update position feedback via pointer to the data receiver
+			if ( isForward )
+				sg->rawCount++;
+			else
+				sg->rawCount--;
+			txData.jointFeedback[sg->jointNumber] = sg->rawCount;
 		}
 	}
 

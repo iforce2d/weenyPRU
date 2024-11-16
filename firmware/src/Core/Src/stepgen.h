@@ -10,11 +10,8 @@ typedef struct {
     GPIO_TypeDef* dirPort;
 	uint16_t dirPin;
 	uint32_t stepTimerChannel;
-
-    volatile int32_t *ptrFrequencyCommand; 	// pointer to the data source where to get the frequency command
-    volatile int32_t *ptrFeedback;       	// pointer where to put the feedback
-
     int32_t DDSaccumulator;       			// Direct Digital Synthesis accumulator
+    int32_t rawCount;
 
 } Stepgen;
 

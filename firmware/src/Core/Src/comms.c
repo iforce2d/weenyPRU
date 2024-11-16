@@ -6,9 +6,12 @@
 
 extern SPI_HandleTypeDef hspi2;
 
+// Use separate buffers for SPI DMA to avoid other threads altering data in the middle of a transaction
+
 rxData_t incomingSPIBuffer;     // this buffer is filled by SPI DMA, but may be invalid
+txData_t outgoingSPIBuffer;     // this buffer is passed to SPI DMA
 volatile rxData_t rxData;  		// once we know incomingSPIBuffer is valid, it is copied into this for actual use
-volatile txData_t txData;
+volatile txData_t txData;		// could be used by other parts of code at any time
 
 volatile unsigned int packetCount = 0;
 
@@ -23,9 +26,10 @@ void commsStart() {
 	incomingSPIBuffer.header = 0;
 
 	memset((uint8_t*)&txData, 0, sizeof(txData_t));
+	memset((uint8_t*)&outgoingSPIBuffer, 0, sizeof(txData_t));
 
     txData.header = PRU_DATA;
-    HAL_SPI_TransmitReceive_DMA(&hspi2, (uint8_t*)&txData, (uint8_t*)&incomingSPIBuffer, sizeof(commPacket_t));
+    HAL_SPI_TransmitReceive_DMA(&hspi2, (uint8_t*)&outgoingSPIBuffer, (uint8_t*)&incomingSPIBuffer, sizeof(commPacket_t));
 }
 
 // Rather than sending WRITE and READ messages as separate transactions, the weeny driver always sends a WRITE
@@ -51,7 +55,9 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi) {
         rejectCnt = 0;
 
         if ( haveWritePacket ) {
+        	__disable_irq();
         	memcpy( (uint8_t*)&rxData, (uint8_t*)&incomingSPIBuffer, sizeof(rxData_t) );
+        	__enable_irq();
         }
 
         break;
@@ -97,8 +103,11 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi) {
       Error_Handler();
     }
 
+    __disable_irq();
+	memcpy( (uint8_t*)&outgoingSPIBuffer, (uint8_t*)&txData, sizeof(txData_t) );
+	__enable_irq();
 
-    HAL_SPI_TransmitReceive_DMA(&hspi2, (uint8_t*)&txData, (uint8_t*)&incomingSPIBuffer, sizeof(commPacket_t));
+    HAL_SPI_TransmitReceive_DMA(&hspi2, (uint8_t*)&outgoingSPIBuffer, (uint8_t*)&incomingSPIBuffer, sizeof(commPacket_t));
 }
 
 
