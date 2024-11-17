@@ -52,15 +52,8 @@ See the [main page](../README.md) for further info on TMC2209 setup.
 
 ## Pre-built binaries
 
-The 'legacy' pre-built binary was made before TMC2209 UART support was added, and will only function correctly on a pre-v1.2 board. It shares the 14 digital I/O equally between input and output. That is, pins D1-D7 are inputs, and D8-D14 are outputs.
+See the [binaries page](bin/README.md) for further info.
 
-The 'v1.2' pre-built binary enables UART TMC and XGZP. 
-
-The 'v1.3' pre-built binary enables UART TMC, XGZP, and DS3502.
-
-The 'v1.4' pre-built binary enables UART TMC, XGZP, DS3502 and HX711 (instead of RGB LEDs).
-
-(These version numbers are for the *firmware*, not the board hardware.)
 
 ## Pin mappings
 
