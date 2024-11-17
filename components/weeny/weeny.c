@@ -59,7 +59,7 @@ typedef struct {
 	hal_float_t 	*pos_cmd[JOINTS];			// pin: position command (position units)
 	hal_float_t 	*vel_cmd[JOINTS];			// pin: velocity command (position units/sec)
 	hal_float_t 	*pos_fb[JOINTS];			// pin: position feedback (position units)
-	hal_s32_t		*count[JOINTS];				// pin: psition feedback (raw counts)
+    //hal_s32_t		*count[JOINTS];				// pin: psition feedback (raw counts)
 	hal_float_t 	pos_scale[JOINTS];			// param: steps per position unit
 	float 			freq[JOINTS];				// param: frequency command sent to PRU
 	hal_float_t 	*freq_cmd[JOINTS];			// pin: frequency command monitoring, available in LinuxCNC
@@ -308,10 +308,10 @@ This is throwing errors from axis.py for some reason...
 		if (retval < 0) goto error;
 		data->pos_scale[n] = 1.0;
 
-		retval = hal_pin_s32_newf(HAL_OUT, &(data->count[n]),
-		        comp_id, "%s.joint.%01d.counts", prefix, n);
-		if (retval < 0) goto error;
-		*(data->count[n]) = 0;
+        // retval = hal_pin_s32_newf(HAL_OUT, &(data->count[n]),
+        //         comp_id, "%s.joint.%01d.counts", prefix, n);
+        // if (retval < 0) goto error;
+        // *(data->count[n]) = 0;
 		
 		retval = hal_pin_float_newf(HAL_IN, &(data->pgain[n]),
 				comp_id, "%s.joint.%01d.pgain", prefix, n);
@@ -882,18 +882,19 @@ void spi_read()
 
 					for (i = 0; i < JOINTS; i++)
 					{
-                                                // the PRU DDS accumulator uses 32 bit counter, this code converts that counter into 64 bits
-						accum_diff = rxData.jointFeedback[i] - old_count[i];
-						old_count[i] = rxData.jointFeedback[i];
-						accum[i] += accum_diff;
+                        // the PRU DDS accumulator uses 32 bit counter, this code converts that counter into 64 bits
+                        //accum_diff = rxData.jointFeedback[i] - old_count[i];
+                        //old_count[i] = rxData.jointFeedback[i];
+                        //accum[i] += accum_diff;
 
-						*(data->count[i]) = accum[i] >> STEPBIT;
+                        //*(data->count[i]) = accum[i] >> STEPBIT;
 
-                                                //data->scale_recip[i] = (1.0 / STEP_MASK) / data->pos_scale[i];
-						curr_pos = (double)(accum[i]-STEP_OFFSET) * (1.0 / STEP_MASK);
-                                                *(data->pos_fb[i]) = (float)((curr_pos+0.5) / data->pos_scale[i]);
+                        //data->scale_recip[i] = (1.0 / STEP_MASK) / data->pos_scale[i];
+                        //curr_pos = (double)(accum[i]-STEP_OFFSET) * (1.0 / STEP_MASK);
+                        //*(data->pos_fb[i]) = (float)((curr_pos+0.5) / data->pos_scale[i]);
 
-                                        }
+                        *(data->pos_fb[i]) = (float)(rxData.jointFeedback[i]) / data->pos_scale[i];
+                    }
 					
 					for (i = 0; i < 3; i++)
 						*(data->jogcounts[i]) = rxData.jogcounts[i];
