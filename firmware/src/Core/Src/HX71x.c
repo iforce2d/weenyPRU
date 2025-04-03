@@ -47,8 +47,10 @@ void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
 
 		int32_t tmpInt = (((int32_t) hx71x_data[0]) << 16) | (((int32_t) hx71x_data[1]) << 8) | ((int32_t) hx71x_data[2]);
 
-		// Seems like the sign bit (hx71x_data[0] & 0x80) never goes high, no matter what the value!
-		// Using the next bit seems to work, but still not completely sure this is right...
+		// Seems like the sign bit (hx71x_data[0] & 0x80) never goes high, no matter what the value !
+		// This is probably because we're using SPI to clock in the bits, instead of a bit-bang as in
+		// the datasheet example. As a result we never see the sign bit. As a crappy workaround, using
+		// the next bit as the sign seems to work, as long as the load never goes very high positive...
 		if ( hx71x_data[0] & 0x40 )
 			tmpInt -= 0x800000;
 
