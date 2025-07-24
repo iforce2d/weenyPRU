@@ -116,12 +116,11 @@ bool checkPiType() {
                 ||    !strcmp(dtcs[i], DTC_RPI_MODEL_3AP)
                 ||    !strcmp(dtcs[i], DTC_RPI_MODEL_3B)) {
                 rtapi_print_msg(RTAPI_MSG_INFO, "Raspberry Pi 3 or 4, using BCM2835 driver\n");
-                break;
+                return true;
             } else if(!strcmp(dtcs[i], DTC_RPI_MODEL_5B) || !strcmp(dtcs[i], DTC_RPI_MODEL_5CM)) {
                 rtapi_print_msg(RTAPI_MSG_INFO, "Raspberry Pi 5, using RP1 driver\n");
                 isRP1 = true;
                 return true;
-                break;
             } else {
                 rtapi_print_msg(RTAPI_MSG_ERR, "Error, RPi not detected\n");
                 return false;
