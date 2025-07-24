@@ -2,6 +2,8 @@
 
 This is a LinuxCNC component and firmware that uses the SPI bus on a Raspberry Pi to communicate with a STM32 microcontroller as a programmable realtime unit, for motor control, digital I/O, spindle PWM etc.
 
+![alt text](https://www.iforce2d.net/tmp/weeny.jpeg)
+
 This project was inspired by and uses some code from the 'Remora' system [https://github.com/scottalford75/Remora](https://github.com/scottalford75/Remora)
 
 The firmware for the realtime unit targets STM32F103C8 aka 'Blue Pill'. Source code includes a project file for STM32CubeIDE.
@@ -11,6 +13,8 @@ Unlike Remora, this firmware is not conveniently configurable by SD card, so all
 Tested on Raspberry Pi 3B, 3B+, 4B and ZeroW with 4.19.71 PREEMPT_RT, LinuxCNC 2.8.4
 
 Tested on Raspberry 4B with 6.6.44 PREEMPT_RT, LinuxCNC 2.9.3 (see setupStepsPi4.txt)
+
+Tested on Raspberry 5 with 6.12.11 PREEMPT_RT, LinuxCNC 2.9.4 (https://www.linuxcnc.org/iso/rpi-5-debian-bookworm-6.12.11-arm64-ext4-2025-01-27-0140.img.xz)
 
 <br>
 

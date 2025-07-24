@@ -1,8 +1,6 @@
 
 Download disk image for Pi4 from here:
-https://www.forum.linuxcnc.org/9-installing-linuxcnc/51175-linuxcnc-2-9-2-and-2-93-images-for-raspberry-pi-4b-5
-
-rpi-4-debian-bookworm-6.6.44-rt39-arm64-ext4-2024-08-12-2149.img.xz
+https://forum.linuxcnc.org/9-installing-linuxcnc/55192-linuxcnc-the-raspberry-pi-4-5-official-images-only
 
 Login credentials are cnc/cnc
 
